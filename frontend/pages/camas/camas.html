@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Camas | Punto Venta Muebles</title>
+
+    <!-- BOOTSTRAP -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- FONT AWESOME -->
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            background:#f5f5f5;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        .navbar{
+            background:#111;
+            padding:15px 0;
+        }
+
+        .hero{
+
+            background:
+            linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.65)),
+            url('../../img/banner/camas.png');
+
+            background-size:cover;
+            background-position:center;
+
+            padding:140px 0;
+
+            text-align:center;
+
+            color:white;
+        }
+
+        .hero h1{
+
+            font-size:4rem;
+
+            font-weight:bold;
+        }
+
+        .hero p{
+
+            font-size:1.2rem;
+        }
+
+        .categoria-card{
+
+            background:white;
+
+            border-radius:25px;
+
+            overflow:hidden;
+
+            transition:.3s;
+
+            height:100%;
+        }
+
+        .categoria-card:hover{
+
+            transform:translateY(-10px);
+
+            box-shadow:0 20px 40px rgba(0,0,0,.2);
+        }
+
+        .categoria-card img{
+
+            width:100%;
+
+            height:340px;
+
+            object-fit:cover;
+        }
+
+        .btn-custom{
+
+            background:#ffc107;
+
+            border:none;
+
+            font-weight:bold;
+
+            padding:12px 25px;
+
+            border-radius:30px;
+
+            transition:.3s;
+        }
+
+        .btn-custom:hover{
+
+            background:#e0aa00;
+
+            transform:scale(1.03);
+        }
+
+        footer{
+
+            background:#111;
+
+            color:white;
+
+            text-align:center;
+
+            padding:35px 0;
+
+            margin-top:60px;
+        }
+
+        .iconos i{
+
+            transition:.3s;
+
+            cursor:pointer;
+        }
+
+        .iconos i:hover{
+
+            color:#ffc107;
+
+            transform:scale(1.2);
+        }
+
+        @media(max-width:768px){
+
+            .hero h1{
+
+                font-size:2.7rem;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+<!-- NAVBAR -->
+
+<nav class="navbar navbar-dark">
+
+    <div class="container">
+
+        <a href="../../index.html"
+            class="navbar-brand fw-bold">
+
+            <i class="fa-solid fa-bed"></i>
+
+            Punto Venta Muebles
+
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <div class="container">
+
+        <h1>
+
+            Catálogo de Camas
+
+        </h1>
+
+        <p class="mt-3">
+
+            Descubre nuestras camas modernas y elegantes para tu hogar
+
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- CATEGORIAS -->
+
+<section class="container py-5">
+
+    <div class="text-center mb-5">
+
+        <h2 class="fw-bold">
+
+            Categorías Disponibles
+
+        </h2>
+
+        <p>
+
+            Explora nuestros diferentes modelos y tamaños
+
+        </p>
+
+    </div>
+
+
+
+    <div class="row g-4">
+
+
+
+        <!-- INDIVIDUAL -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="categoria-card shadow">
+
+                <img src="../../img/camas/individual/Cama1.jpg">
+
+                <div class="p-4 text-center">
+
+                    <h3 class="fw-bold">
+
+                        Camas Individuales
+
+                    </h3>
+
+                    <p class="text-muted mt-3">
+
+                        Diseños modernos ideales para habitaciones juveniles y minimalistas.
+
+                    </p>
+
+                    <h4 class="text-warning fw-bold">
+
+                        Desde $4,999 MXN
+
+                    </h4>
+
+                    <a href="individual.html"
+                        class="btn btn-custom mt-3 w-100">
+
+                        Ver Catálogo
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- MATRIMONIAL -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="categoria-card shadow">
+
+                <img src="../../img/camas/matrimonial/Cama1.jpg">
+
+                <div class="p-4 text-center">
+
+                    <h3 class="fw-bold">
+
+                        Camas Matrimoniales
+
+                    </h3>
+
+                    <p class="text-muted mt-3">
+
+                        Camas amplias y elegantes para mayor comodidad y descanso.
+
+                    </p>
+
+                    <h4 class="text-warning fw-bold">
+
+                        Desde $7,499 MXN
+
+                    </h4>
+
+                    <a href="matrimonial.html"
+                        class="btn btn-custom mt-3 w-100">
+
+                        Ver Catálogo
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- KING SIZE -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="categoria-card shadow">
+
+                <img src="../../img/camas/king_size/Cama1.jpg">
+
+                <div class="p-4 text-center">
+
+                    <h3 class="fw-bold">
+
+                        Camas King Size
+
+                    </h3>
+
+                    <p class="text-muted mt-3">
+
+                        Máximo lujo, amplitud y elegancia para habitaciones premium.
+
+                    </p>
+
+                    <h4 class="text-warning fw-bold">
+
+                        Desde $10,999 MXN
+
+                    </h4>
+
+                    <a href="king_size.html"
+                        class="btn btn-custom mt-3 w-100">
+
+                        Ver Catálogo
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- BENEFICIOS -->
+
+<section class="container py-5">
+
+    <div class="row text-center g-4">
+
+        <div class="col-md-4">
+
+            <div class="bg-white p-4 rounded shadow h-100">
+
+                <i class="fa-solid fa-truck-fast fa-3x text-warning mb-3"></i>
+
+                <h4 class="fw-bold">
+
+                    Envíos Seguros
+
+                </h4>
+
+                <p>
+
+                    Entregas rápidas y protegidas a todo México.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-md-4">
+
+            <div class="bg-white p-4 rounded shadow h-100">
+
+                <i class="fa-solid fa-shield-halved fa-3x text-warning mb-3"></i>
+
+                <h4 class="fw-bold">
+
+                    Garantía Premium
+
+                </h4>
+
+                <p>
+
+                    Todos nuestros productos cuentan con garantía de calidad.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-md-4">
+
+            <div class="bg-white p-4 rounded shadow h-100">
+
+                <i class="fa-solid fa-credit-card fa-3x text-warning mb-3"></i>
+
+                <h4 class="fw-bold">
+
+                    Pagos Seguros
+
+                </h4>
+
+                <p>
+
+                    Métodos de pago confiables y protegidos.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- FOOTER -->
+
+<footer>
+
+    <h4 class="fw-bold">
+
+        Punto Venta Muebles
+
+    </h4>
+
+    <p>
+
+        Catálogo premium de camas modernas y elegantes
+
+    </p>
+
+    <div class="iconos mt-3">
+
+        <i class="fa-brands fa-facebook fa-2x mx-2"></i>
+
+        <i class="fa-brands fa-instagram fa-2x mx-2"></i>
+
+        <i class="fa-brands fa-whatsapp fa-2x mx-2"></i>
+
+    </div>
+
+</footer>
+
+<script>
+
+    let carrito = [];
+
+    function agregarCarrito(nombre, precio){
+
+        carrito.push({
+            nombre,
+            precio
+        });
+
+        actualizarCarrito();
+
+        Swal.fire({
+
+            icon:'success',
+
+            title:'Producto agregado',
+
+            text: nombre + ' agregado al carrito',
+
+            confirmButtonColor:'#ffc107'
+
+        });
+
+    }
+
+    function actualizarCarrito(){
+
+        let lista =
+        document.getElementById('lista-carrito');
+
+        let total =
+        document.getElementById('total');
+
+        let contador =
+        document.getElementById('contador');
+
+        lista.innerHTML = "";
+
+        let suma = 0;
+
+        carrito.forEach(producto=>{
+
+            suma += producto.precio;
+
+            lista.innerHTML += `
+
+            <div class="border rounded p-3 mb-3">
+
+                <h6 class="fw-bold">
+
+                    ${producto.nombre}
+
+                </h6>
+
+                <p>
+
+                    $${producto.precio} MXN
+
+                </p>
+
+            </div>
+
+            `;
+
+        });
+
+        total.innerHTML =
+        `$${suma} MXN`;
+
+        contador.innerHTML =
+        carrito.length;
+
+    }
+
+</script>
+
+<!-- BOOTSTRAP -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
