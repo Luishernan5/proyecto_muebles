@@ -274,3 +274,25 @@ button.carrito-btn {
 .navbar-pvm .nav-link:hover {
     color: #ffc107 !important;
 }
+
+/* ——— Volver (categorías) ——— */
+.pvm-volver-categoria {
+    background: #0d0d0d;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.pvm-volver-categoria__link {
+    color: #f0f0f0;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.pvm-volver-categoria__link:hover {
+    color: #ffc107;
+}

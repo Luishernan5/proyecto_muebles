@@ -12,7 +12,7 @@
 
     <!-- BOOTSTRAP -->
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    <link href="/vendor/bootstrap5/bootstrap.min.css"
         rel="stylesheet">
 
     <!-- FONT AWESOME -->
@@ -362,7 +362,7 @@ $7,999 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Nova',7999)">
+onclick="agregarCarrito(11)">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -451,7 +451,7 @@ $8,699 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Luxury',8699)">
+onclick="agregarCarrito(12)">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -544,7 +544,7 @@ $9,299 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Premium',9299)">
+onclick="agregarCarrito(13)">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -633,7 +633,7 @@ $9,999 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Deluxe',9999)">
+onclick="agregarCarrito(14)">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -722,7 +722,7 @@ $10,999 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Infinity',10999)">
+onclick="agregarCarrito(15)">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -814,7 +814,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Nova',7999)">
+onclick="agregarCarrito(11)">
 
 Agregar al carrito
 
@@ -891,7 +891,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Luxury',8699)">
+onclick="agregarCarrito(12)">
 
 Agregar al carrito
 
@@ -968,7 +968,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Premium',9299)">
+onclick="agregarCarrito(13)">
 
 Agregar al carrito
 
@@ -1045,7 +1045,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Deluxe',9999)">
+onclick="agregarCarrito(14)">
 
 Agregar al carrito
 
@@ -1122,7 +1122,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Infinity',10999)">
+onclick="agregarCarrito(15)">
 
 Agregar al carrito
 
@@ -1143,69 +1143,34 @@ Agregar al carrito
 
 <!-- CARRITO -->
 
-<button class="btn btn-warning carrito-btn shadow"
-data-bs-toggle="offcanvas"
-data-bs-target="#carrito">
-
-<i class="fa-solid fa-cart-shopping"></i>
-
-<span class="badge-carrito"
-id="contador">
-
-0
-
-</span>
-
+<button type="button" class="btn btn-warning carrito-btn carrito-flotante shadow" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas" aria-label="Abrir carrito">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span class="badge-carrito" data-carrito-contador id="contador">0</span>
 </button>
 
-
-
-<div class="offcanvas offcanvas-end"
-tabindex="-1"
-id="carrito">
-
-<div class="offcanvas-header">
-
-<h4 class="fw-bold">
-
-Carrito de compras
-
-</h4>
-
-<button class="btn-close"
-data-bs-dismiss="offcanvas">
-
-</button>
-
-</div>
-
-<div class="offcanvas-body">
-
-<div id="lista-carrito"></div>
-
-<hr>
-
-<h5>
-
-Total:
-<span id="total">
-
-$0 MXN
-
-</span>
-
-</h5>
-
-<button class="btn btn-success w-100 mt-4">
-
-<i class="fa-solid fa-credit-card"></i>
-
-Finalizar compra
-
-</button>
-
-</div>
-
+<div class="offcanvas offcanvas-end" tabindex="-1" id="carritoCanvas" aria-labelledby="carritoCanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h4 class="fw-bold mb-0" id="carritoCanvasLabel"><i class="fa-solid fa-cart-shopping me-2"></i>Carrito de compras</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+        <div id="lista-carrito" class="flex-grow-1"></div>
+        <hr class="my-3">
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>Subtotal</span>
+            <span>$<span id="subtotal">0.00</span> MXN</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>IVA (16%)</span>
+            <span>$<span id="iva">0.00</span> MXN</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+            <span>Total</span>
+            <span>$<span id="total">0.00</span> MXN</span>
+        </div>
+        <button type="button" class="btn btn-success w-100 mb-2" onclick="finalizarCompra()"><i class="fa-solid fa-credit-card me-2"></i>Finalizar compra</button>
+        <button type="button" class="btn btn-outline-danger w-100" onclick="vaciarCarrito()">Vaciar carrito</button>
+    </div>
 </div>
 
 
@@ -1232,102 +1197,10 @@ Tienda premium de camas modernas
 
 <!-- BOOTSTRAP -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-
-
-<script>
-
-let carrito = [];
-
-function agregarCarrito(nombre, precio){
-
-carrito.push({
-nombre,
-precio
-});
-
-actualizarCarrito();
-
-Swal.fire({
-
-icon:'success',
-
-title:'Producto agregado',
-
-text: nombre + ' agregado al carrito',
-
-confirmButtonColor:'#ffc107'
-
-});
-
-}
-
-function actualizarCarrito(){
-
-let lista =
-document.getElementById('lista-carrito');
-
-let total =
-document.getElementById('total');
-
-let contador =
-document.getElementById('contador');
-
-lista.innerHTML = "";
-
-let suma = 0;
-
-carrito.forEach((producto,index)=>{
-
-suma += producto.precio;
-
-lista.innerHTML += `
-
-<div class="border rounded p-3 mb-3">
-
-<h6 class="fw-bold">
-
-${producto.nombre}
-
-</h6>
-
-<p>
-
-$${producto.precio} MXN
-
-</p>
-
-<button class="btn btn-danger btn-sm"
-onclick="eliminarProducto(${index})">
-
-Eliminar
-
-</button>
-
-</div>
-
-`;
-
-});
-
-total.innerHTML =
-`$${suma} MXN`;
-
-contador.innerHTML =
-carrito.length;
-
-}
-
-function eliminarProducto(index){
-
-carrito.splice(index,1);
-
-actualizarCarrito();
-
-}
-
-</script>
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script src="../../js/pvm-nav-volver.js"></script>
+<script src="../../js/carrito.js"></script>
+<script src="../../js/stock-tienda.js"></script>
 
 </body>
 

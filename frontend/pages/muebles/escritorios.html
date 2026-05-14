@@ -10,7 +10,7 @@
     <title>Escritorios | Punto Venta Muebles</title>
 
     <!-- BOOTSTRAP -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    <link href="/vendor/bootstrap5/bootstrap.min.css"
         rel="stylesheet">
 
     <!-- FONT AWESOME -->
@@ -159,7 +159,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Escritorio Elegance',4999,'../../img/muebles/escritorios/1.jpg')">
+                            onclick="agregarCarrito(36)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -261,7 +261,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Escritorio Luxury',5999,'../../img/muebles/escritorios/2.jpg')">
+                            onclick="agregarCarrito(37)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -363,7 +363,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Escritorio Premium',6499,'../../img/muebles/escritorios/3.jpg')">
+                            onclick="agregarCarrito(38)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -465,7 +465,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Escritorio Deluxe',7499,'../../img/muebles/escritorios/4.jpg')">
+                            onclick="agregarCarrito(39)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -567,7 +567,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Escritorio Infinity',8499,'../../img/muebles/escritorios/5.jpg')">
+                            onclick="agregarCarrito(40)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -633,7 +633,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Escritorio Elegance',4999,'../../img/muebles/escritorios/1.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(36)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -683,7 +683,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Escritorio Luxury',5999,'../../img/muebles/escritorios/2.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(37)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -733,7 +733,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Escritorio Premium',6499,'../../img/muebles/escritorios/3.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(38)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -783,7 +783,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 3 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Escritorio Deluxe',7499,'../../img/muebles/escritorios/4.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(39)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -833,7 +833,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 3 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Escritorio Infinity',8499,'../../img/muebles/escritorios/5.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(40)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -885,11 +885,13 @@ class="img-fluid rounded shadow">
 
 <!-- BOOTSTRAP -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script src="../../js/pvm-nav-volver.js"></script>
 
 
 
     <script src="../../js/carrito.js"></script>
+    <script src="../../js/stock-tienda.js"></script>
 </body>
 
 </html>

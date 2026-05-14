@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Camas Individuales | Punto Venta Muebles</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="../../css/camas/individual.css">
@@ -51,7 +51,7 @@ Disponible en stock
 </p>
 <h3 class="precio">$4,999 MXN</h3>
 <div class="d-grid gap-2 mt-4">
-<button class="btn-carrito" onclick="agregarCarrito('Cama Individual Nova',4999,'../../img/camas/individual/Cama1.jpg')"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
+<button class="btn-carrito" onclick="agregarCarrito(1)"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
 <button class="btn-detalles" data-bs-toggle="modal" data-bs-target="#detalle1">Ver detalles</button>
 </div>
 </div>
@@ -81,7 +81,7 @@ Disponible en stock
 </p>
 <h3 class="precio">$5,699 MXN</h3>
 <div class="d-grid gap-2 mt-4">
-<button class="btn-carrito" onclick="agregarCarrito('Cama Individual Luxury',5699,'../../img/camas/individual/Cama2.jpg')"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
+<button class="btn-carrito" onclick="agregarCarrito(2)"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
 <button class="btn-detalles" data-bs-toggle="modal" data-bs-target="#detalle2">Ver detalles</button>
 </div>
 </div>
@@ -111,7 +111,7 @@ Disponible en stock
 </p>
 <h3 class="precio">$6,299 MXN</h3>
 <div class="d-grid gap-2 mt-4">
-<button class="btn-carrito" onclick="agregarCarrito('Cama Individual Premium',6299,'../../img/camas/individual/Cama3.jpg')"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
+<button class="btn-carrito" onclick="agregarCarrito(3)"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
 <button class="btn-detalles" data-bs-toggle="modal" data-bs-target="#detalle3">Ver detalles</button>
 </div>
 </div>
@@ -138,7 +138,7 @@ Disponible en stock
 </p>
 <h3 class="precio">$6,999 MXN</h3>
 <div class="d-grid gap-2 mt-4">
-<button class="btn-carrito" onclick="agregarCarrito('Cama Individual Deluxe',6999,'../../img/camas/individual/Cama4.jpg')"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
+<button class="btn-carrito" onclick="agregarCarrito(4)"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
 <button class="btn-detalles" data-bs-toggle="modal" data-bs-target="#detalle4">Ver detalles</button>
 </div>
 </div>
@@ -168,7 +168,7 @@ Disponible en stock
 </p>
 <h3 class="precio">$7,499 MXN</h3>
 <div class="d-grid gap-2 mt-4">
-<button class="btn-carrito" onclick="agregarCarrito('Cama Individual Infinity',7499,'../../img/camas/individual/Cama5.jpg')"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
+<button class="btn-carrito" onclick="agregarCarrito(5)"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
 <button class="btn-detalles" data-bs-toggle="modal" data-bs-target="#detalle5">Ver detalles</button>
 </div>
 </div>
@@ -180,27 +180,27 @@ Disponible en stock
 <div class="modal fade" id="detalle1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h4 class="fw-bold">Cama Individual Nova</h4><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><img src="../../img/camas/individual/Cama1.jpg" class="detalle-img"></div><div class="col-md-6"><h3 class="precio">$4,999 MXN</h3><p class="stock">
 <i class="fa-solid fa-check"></i>
 Disponible en stock
-</p><hr><h5 class="fw-bold">Características</h5><ul><li>Madera premium</li><li>Diseño moderno</li><li>Base resistente</li><li>Acabado elegante</li><li>Fácil armado</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito('Cama Individual Nova',4999,'../../img/camas/individual/Cama1.jpg')">Agregar al carrito</button></div></div></div></div></div></div>
+</p><hr><h5 class="fw-bold">Características</h5><ul><li>Madera premium</li><li>Diseño moderno</li><li>Base resistente</li><li>Acabado elegante</li><li>Fácil armado</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito(1)">Agregar al carrito</button></div></div></div></div></div></div>
 
 <div class="modal fade" id="detalle2"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h4 class="fw-bold">Cama Individual Luxury</h4><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><img src="../../img/camas/individual/Cama2.jpg" class="detalle-img"></div><div class="col-md-6"><h3 class="precio">$5,699 MXN</h3><p class="stock">
 <i class="fa-solid fa-check"></i>
 Disponible en stock
-</p><hr><h5 class="fw-bold">Características</h5><ul><li>Diseño premium</li><li>Madera reforzada</li><li>Estilo minimalista</li><li>Alta comodidad</li><li>Acabado moderno</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito('Cama Individual Luxury',5699,'../../img/camas/individual/Cama2.jpg')">Agregar al carrito</button></div></div></div></div></div></div>
+</p><hr><h5 class="fw-bold">Características</h5><ul><li>Diseño premium</li><li>Madera reforzada</li><li>Estilo minimalista</li><li>Alta comodidad</li><li>Acabado moderno</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito(2)">Agregar al carrito</button></div></div></div></div></div></div>
 
 <div class="modal fade" id="detalle3"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h4 class="fw-bold">Cama Individual Premium</h4><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><img src="../../img/camas/individual/Cama3.jpg" class="detalle-img"></div><div class="col-md-6"><h3 class="precio">$6,299 MXN</h3><p class="stock">
 <i class="fa-solid fa-check"></i>
 Disponible en stock
-</p><hr><h5 class="fw-bold">Características</h5><ul><li>Base resistente</li><li>Acabado premium</li><li>Diseño elegante</li><li>Madera moderna</li><li>Estilo contemporáneo</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito('Cama Individual Premium',6299,'../../img/camas/individual/Cama3.jpg')">Agregar al carrito</button></div></div></div></div></div></div>
+</p><hr><h5 class="fw-bold">Características</h5><ul><li>Base resistente</li><li>Acabado premium</li><li>Diseño elegante</li><li>Madera moderna</li><li>Estilo contemporáneo</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito(3)">Agregar al carrito</button></div></div></div></div></div></div>
 
 <div class="modal fade" id="detalle4"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h4 class="fw-bold">Cama Individual Deluxe</h4><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><img src="../../img/camas/individual/Cama4.jpg" class="detalle-img"></div><div class="col-md-6"><h3 class="precio">$6,999 MXN</h3><p class="stock">
 <i class="fa-solid fa-check"></i>
 Disponible en stock
-</p><hr><h5 class="fw-bold">Características</h5><ul><li>Diseño deluxe</li><li>Estructura premium</li><li>Acabado elegante</li><li>Alta resistencia</li><li>Estilo moderno</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito('Cama Individual Deluxe',6999,'../../img/camas/individual/Cama4.jpg')">Agregar al carrito</button></div></div></div></div></div></div>
+</p><hr><h5 class="fw-bold">Características</h5><ul><li>Diseño deluxe</li><li>Estructura premium</li><li>Acabado elegante</li><li>Alta resistencia</li><li>Estilo moderno</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito(4)">Agregar al carrito</button></div></div></div></div></div></div>
 
 <div class="modal fade" id="detalle5"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h4 class="fw-bold">Cama Individual Infinity</h4><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row"><div class="col-md-6"><img src="../../img/camas/individual/Cama5.jpg" class="detalle-img"></div><div class="col-md-6"><h3 class="precio">$7,499 MXN</h3><p class="stock">
 <i class="fa-solid fa-check"></i>
 Disponible en stock
-</p><hr><h5 class="fw-bold">Características</h5><ul><li>Modelo exclusivo</li><li>Diseño premium</li><li>Madera reforzada</li><li>Acabado moderno</li><li>Gran comodidad</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito('Cama Individual Infinity',7499,'../../img/camas/individual/Cama5.jpg')">Agregar al carrito</button></div></div></div></div></div></div>
+</p><hr><h5 class="fw-bold">Características</h5><ul><li>Modelo exclusivo</li><li>Diseño premium</li><li>Madera reforzada</li><li>Acabado moderno</li><li>Gran comodidad</li></ul><button class="btn btn-warning w-100" onclick="agregarCarrito(5)">Agregar al carrito</button></div></div></div></div></div></div>
 
 <button type="button" class="btn btn-warning carrito-btn carrito-flotante shadow" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas" aria-label="Abrir carrito">
     <i class="fa-solid fa-cart-shopping"></i>
@@ -234,7 +234,9 @@ Disponible en stock
 
 <footer><h4 class="fw-bold">Punto Venta Muebles</h4><p>Tienda premium de muebles y camas</p></footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script src="../../js/pvm-nav-volver.js"></script>
 <script src="../../js/carrito.js"></script>
+<script src="../../js/stock-tienda.js"></script>
 </body>
 </html>

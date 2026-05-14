@@ -10,7 +10,7 @@
     <title>Closets | Punto Venta Muebles</title>
 
     <!-- BOOTSTRAP -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    <link href="/vendor/bootstrap5/bootstrap.min.css"
         rel="stylesheet">
 
     <!-- FONT AWESOME -->
@@ -162,7 +162,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Closet Elegance',9999,'../../img/muebles/closets/1.jpg')">
+                            onclick="agregarCarrito(31)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -267,7 +267,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Closet Luxury',11499,'../../img/muebles/closets/2.jpg')">
+                            onclick="agregarCarrito(32)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -372,7 +372,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Closet Premium',12999,'../../img/muebles/closets/3.jpg')">
+                            onclick="agregarCarrito(33)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -477,7 +477,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Closet Deluxe',13999,'../../img/muebles/closets/4.jpg')">
+                            onclick="agregarCarrito(34)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -582,7 +582,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Closet Infinity',14999,'../../img/muebles/closets/5.jpg')">
+                            onclick="agregarCarrito(35)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -648,7 +648,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Closet Elegance',9999,'../../img/muebles/closets/1.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(31)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -698,7 +698,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Closet Luxury',11499,'../../img/muebles/closets/2.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(32)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -748,7 +748,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Closet Premium',12999,'../../img/muebles/closets/3.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(33)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -798,7 +798,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 3 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Closet Deluxe',13999,'../../img/muebles/closets/4.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(34)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -848,7 +848,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 3 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Closet Infinity',14999,'../../img/muebles/closets/5.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(35)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -900,13 +900,15 @@ class="img-fluid rounded shadow">
 
 <!-- BOOTSTRAP -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script src="../../js/pvm-nav-volver.js"></script>
 
 
 
 <!-- JS -->
 
     <script src="../../js/carrito.js"></script>
+    <script src="../../js/stock-tienda.js"></script>
 </body>
 
 </html>

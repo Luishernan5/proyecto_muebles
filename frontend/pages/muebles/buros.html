@@ -11,7 +11,7 @@
 
     <!-- BOOTSTRAP -->
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    <link href="/vendor/bootstrap5/bootstrap.min.css"
         rel="stylesheet">
 
     <!-- FONT AWESOME -->
@@ -162,7 +162,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Buró Elegance',2999,'../../img/muebles/buros/1.jpg')">
+                            onclick="agregarCarrito(26)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -267,7 +267,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Buró Luxury',3499,'../../img/muebles/buros/2.jpg')">
+                            onclick="agregarCarrito(27)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -369,7 +369,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Buró Classic',2799,'../../img/muebles/buros/3.jpg')">
+                            onclick="agregarCarrito(28)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -474,7 +474,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Buró Deluxe',3999,'../../img/muebles/buros/4.jpg')">
+                            onclick="agregarCarrito(29)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -579,7 +579,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Buró Infinity',4499,'../../img/muebles/buros/5.jpg')">
+                            onclick="agregarCarrito(30)">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -643,7 +643,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 1 año</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Buró Elegance',2999,'../../img/muebles/buros/1.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(26)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -691,7 +691,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Buró Luxury',3499,'../../img/muebles/buros/2.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(27)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -739,7 +739,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 1 año</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Buró Classic',2799,'../../img/muebles/buros/3.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(28)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -787,7 +787,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Buró Deluxe',3999,'../../img/muebles/buros/4.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(29)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -835,7 +835,7 @@ class="img-fluid rounded shadow">
 <li>Garantía 2 años</li>
 </ul>
                         <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
-                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Buró Infinity',4499,'../../img/muebles/buros/5.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito(30)"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
 </div>
 
@@ -887,13 +887,15 @@ class="img-fluid rounded shadow">
 
 <!-- BOOTSTRAP -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script src="../../js/pvm-nav-volver.js"></script>
 
 
 
 <!-- JS -->
 
     <script src="../../js/carrito.js"></script>
+    <script src="../../js/stock-tienda.js"></script>
 </body>
 
 </html>

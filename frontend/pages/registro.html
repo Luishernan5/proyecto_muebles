@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de cliente | Punto Venta Muebles</title>
+    <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center min-vh-100 py-4">
+<div class="container" style="max-width: 440px">
+    <div class="card shadow border-0">
+        <div class="card-body p-4 p-md-5">
+            <h1 class="h4 fw-bold mb-1">Crear cuenta</h1>
+            <p class="text-muted small mb-4">Registro solo para rol <strong>cliente</strong>. Los administradores los da de alta otro admin o el script <code>seed:admin</code>.</p>
+            <form id="f-reg" novalidate>
+                <div class="mb-3">
+                    <label class="form-label" for="nombre">Nombre completo</label>
+                    <input type="text" class="form-control" id="nombre" required minlength="2" maxlength="100" autocomplete="name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="email">Correo electrónico</label>
+                    <input type="email" class="form-control" id="email" required autocomplete="email">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="password">Contraseña</label>
+                    <input type="password" class="form-control" id="password" required minlength="6" autocomplete="new-password">
+                    <div class="form-text">Mínimo 6 caracteres.</div>
+                </div>
+                <div id="err" class="alert alert-danger py-2 small d-none" role="alert"></div>
+                <button type="submit" class="btn btn-warning w-100 py-2 fw-semibold">Registrarme</button>
+            </form>
+            <p class="small text-center text-muted mt-4 mb-0">
+                ¿Ya tienes cuenta? <a href="login.html">Iniciar sesión</a>
+            </p>
+            <p class="small text-center mt-2 mb-0">
+                <a href="/index.html" class="text-decoration-none text-muted">← Volver a la tienda</a>
+            </p>
+        </div>
+    </div>
+</div>
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    var JWT_KEY = "pvm_jwt";
+    function apiRoot() {
+        return (window.PVM_API && String(window.PVM_API).replace(/\/$/, "")) || "/api";
+    }
+    document.getElementById("f-reg").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var err = document.getElementById("err");
+        err.classList.add("d-none");
+        var nombre = document.getElementById("nombre").value.trim();
+        var email = document.getElementById("email").value.trim();
+        var password = document.getElementById("password").value;
+        fetch(apiRoot() + "/auth/registro", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nombre: nombre, email: email, password: password }),
+        })
+            .then(function (r) {
+                return r.json().then(function (body) {
+                    if (!r.ok) {
+                        throw new Error((body.error && body.error.message) || "Error " + r.status);
+                    }
+                    return body;
+                });
+            })
+            .then(function (body) {
+                var t = body.data && body.data.token;
+                if (!t) throw new Error("Respuesta sin token");
+                localStorage.setItem(JWT_KEY, t);
+                window.location.href = "/index.html";
+            })
+            .catch(function (e) {
+                err.textContent = e.message || "No se pudo registrar";
+                err.classList.remove("d-none");
+            });
+    });
+})();
+</script>
+</body>
+</html>

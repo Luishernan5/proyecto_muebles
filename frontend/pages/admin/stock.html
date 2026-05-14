@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario (admin) | Punto Venta Muebles</title>
+    <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light py-5">
+<div class="container" style="max-width: 520px">
+    <h1 class="h4 fw-bold mb-3">Ajuste de stock</h1>
+    <p class="text-muted small">Suma o resta unidades en la tabla <code>Stock</code> (positivo = entrada, negativo = salida). Debe quedar ≥ 0. Se registra en <code>MovimientosStock</code> si existe.</p>
+    <div class="card shadow-sm border-0 mt-3">
+        <div class="card-body p-4">
+            <form id="f-stock">
+                <div class="mb-3">
+                    <label class="form-label" for="id_producto">ID producto</label>
+                    <input type="number" min="1" class="form-control" id="id_producto" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="delta">Cantidad (Δ)</label>
+                    <input type="number" class="form-control" id="delta" required placeholder="ej. 10 o -2">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="comentario">Comentario (opcional)</label>
+                    <input type="text" class="form-control" id="comentario" maxlength="240" placeholder="Motivo del movimiento">
+                </div>
+                <div id="msg" class="alert py-2 small d-none" role="status"></div>
+                <button type="submit" class="btn btn-success w-100">Aplicar</button>
+            </form>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a href="../login.html?redirect=%2Fpages%2Fadmin%2Fstock.html" class="btn btn-outline-secondary btn-sm">Cambiar usuario</a>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="btn-salir">Cerrar sesión</button>
+                <a href="../../index.html" class="btn btn-outline-secondary btn-sm ms-auto">Tienda</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    var JWT_KEY = "pvm_jwt";
+    var LOGIN = "../login.html?redirect=" + encodeURIComponent("/pages/admin/stock.html");
+    function apiRoot() {
+        return (window.PVM_API && String(window.PVM_API).replace(/\/$/, "")) || "/api";
+    }
+    function token() {
+        try {
+            return localStorage.getItem(JWT_KEY);
+        } catch (e) {
+            return null;
+        }
+    }
+    if (!token()) {
+        window.location.href = LOGIN;
+    }
+    fetch(apiRoot() + "/auth/me", {
+        headers: { Authorization: "Bearer " + token() },
+    })
+        .then(function (r) {
+            return r.json();
+        })
+        .then(function (body) {
+            var u = body.data;
+            if (!u || u.rol !== "admin") {
+                window.location.href = LOGIN;
+            }
+        })
+        .catch(function () {
+            window.location.href = LOGIN;
+        });
+
+    document.getElementById("btn-salir").addEventListener("click", function () {
+        try {
+            localStorage.removeItem(JWT_KEY);
+        } catch (e) {}
+        window.location.href = LOGIN;
+    });
+    document.getElementById("f-stock").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var msg = document.getElementById("msg");
+        msg.className = "alert py-2 small d-none";
+        var id_producto = parseInt(document.getElementById("id_producto").value, 10);
+        var delta = parseInt(document.getElementById("delta").value, 10);
+        var comentario = document.getElementById("comentario").value.trim();
+        fetch(apiRoot() + "/admin/stock", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token(),
+            },
+            body: JSON.stringify({
+                id_producto: id_producto,
+                delta: delta,
+                comentario: comentario || undefined,
+            }),
+        })
+            .then(function (r) {
+                return r.json().then(function (body) {
+                    if (!r.ok) {
+                        throw new Error((body.error && body.error.message) || "Error " + r.status);
+                    }
+                    return body;
+                });
+            })
+            .then(function (body) {
+                var d = body.data || {};
+                msg.textContent = "Nuevo inventario para producto " + d.id_producto + ": " + d.cantidad + " uds.";
+                msg.className = "alert alert-success py-2 small";
+            })
+            .catch(function (e) {
+                msg.textContent = e.message || "Error";
+                msg.className = "alert alert-danger py-2 small";
+            });
+        msg.classList.remove("d-none");
+    });
+})();
+</script>
+</body>
+</html>
