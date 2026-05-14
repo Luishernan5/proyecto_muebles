@@ -8,8 +8,8 @@
 </head>
 <body class="bg-light py-5">
 <div class="container" style="max-width: 520px">
-    <h1 class="h4 fw-bold mb-3">Ajuste de stock</h1>
-    <p class="text-muted small">Suma o resta unidades en la tabla <code>Stock</code> (positivo = entrada, negativo = salida). Debe quedar ≥ 0. Se registra en <code>MovimientosStock</code> si existe.</p>
+    <h1 class="h4 fw-bold mb-3">Ajuste rápido de stock</h1>
+    <p class="text-muted small">Para reponer con el catálogo y carrito de abasto, abre <a href="tienda.html">Zona administración — Abasto</a>. La <a href="../../index.html">tienda pública</a> es solo para clientes. Aquí puedes sumar o restar por ID (positivo = entrada, negativo = salida). El inventario no puede quedar negativo ni superar el tope del servidor (STOCK_CEILING_PER_PRODUCT).</p>
     <div class="card shadow-sm border-0 mt-3">
         <div class="card-body p-4">
             <form id="f-stock">
@@ -21,15 +21,11 @@
                     <label class="form-label" for="delta">Cantidad (Δ)</label>
                     <input type="number" class="form-control" id="delta" required placeholder="ej. 10 o -2">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label" for="comentario">Comentario (opcional)</label>
-                    <input type="text" class="form-control" id="comentario" maxlength="240" placeholder="Motivo del movimiento">
-                </div>
                 <div id="msg" class="alert py-2 small d-none" role="status"></div>
                 <button type="submit" class="btn btn-success w-100">Aplicar</button>
             </form>
-            <div class="d-flex flex-wrap gap-2 mt-3">
-                <a href="../login.html?redirect=%2Fpages%2Fadmin%2Fstock.html" class="btn btn-outline-secondary btn-sm">Cambiar usuario</a>
+            <div class="d-flex gap-2 mt-3">
+                <a href="login.html" class="btn btn-outline-secondary btn-sm">Cambiar usuario</a>
                 <button type="button" class="btn btn-outline-danger btn-sm" id="btn-salir">Cerrar sesión</button>
                 <a href="../../index.html" class="btn btn-outline-secondary btn-sm ms-auto">Tienda</a>
             </div>
@@ -40,7 +36,6 @@
 <script>
 (function () {
     var JWT_KEY = "pvm_jwt";
-    var LOGIN = "../login.html?redirect=" + encodeURIComponent("/pages/admin/stock.html");
     function apiRoot() {
         return (window.PVM_API && String(window.PVM_API).replace(/\/$/, "")) || "/api";
     }
@@ -51,30 +46,34 @@
             return null;
         }
     }
-    if (!token()) {
-        window.location.href = LOGIN;
-    }
-    fetch(apiRoot() + "/auth/me", {
-        headers: { Authorization: "Bearer " + token() },
-    })
-        .then(function (r) {
-            return r.json();
-        })
-        .then(function (body) {
-            var u = body.data;
-            if (!u || u.rol !== "admin") {
-                window.location.href = LOGIN;
-            }
-        })
-        .catch(function () {
-            window.location.href = LOGIN;
-        });
-
-    document.getElementById("btn-salir").addEventListener("click", function () {
+    function logoutToAdminLogin() {
         try {
             localStorage.removeItem(JWT_KEY);
         } catch (e) {}
-        window.location.href = LOGIN;
+        window.location.href = "login.html";
+    }
+    async function ensureAdminAccess() {
+        var tok = token();
+        if (!tok) {
+            logoutToAdminLogin();
+            return false;
+        }
+        try {
+            var r = await fetch(apiRoot() + "/auth/me", {
+                headers: { Authorization: "Bearer " + tok },
+            });
+            var body = await r.json().catch(function () { return {}; });
+            if (!r.ok || !body.data || String(body.data.rol || "").toLowerCase() !== "admin") {
+                throw new Error("not admin");
+            }
+            return true;
+        } catch (e) {
+            logoutToAdminLogin();
+            return false;
+        }
+    }
+    document.getElementById("btn-salir").addEventListener("click", function () {
+        logoutToAdminLogin();
     });
     document.getElementById("f-stock").addEventListener("submit", function (ev) {
         ev.preventDefault();
@@ -82,37 +81,65 @@
         msg.className = "alert py-2 small d-none";
         var id_producto = parseInt(document.getElementById("id_producto").value, 10);
         var delta = parseInt(document.getElementById("delta").value, 10);
-        var comentario = document.getElementById("comentario").value.trim();
+        if (Number.isNaN(id_producto) || id_producto < 1) {
+            msg.textContent = "Ingresa un ID de producto válido.";
+            msg.className = "alert alert-danger py-2 small";
+            msg.classList.remove("d-none");
+            return;
+        }
+        if (Number.isNaN(delta) || delta === 0) {
+            msg.textContent = "La cantidad debe ser un entero distinto de cero.";
+            msg.className = "alert alert-danger py-2 small";
+            msg.classList.remove("d-none");
+            return;
+        }
         fetch(apiRoot() + "/admin/stock", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: "Bearer " + token(),
             },
-            body: JSON.stringify({
-                id_producto: id_producto,
-                delta: delta,
-                comentario: comentario || undefined,
-            }),
+            body: JSON.stringify({ id_producto: id_producto, delta: delta }),
         })
             .then(function (r) {
-                return r.json().then(function (body) {
+                return r.text().then(function (text) {
+                    var body = {};
+                    try {
+                        body = text ? JSON.parse(text) : {};
+                    } catch (e) {
+                        body = {};
+                    }
                     if (!r.ok) {
-                        throw new Error((body.error && body.error.message) || "Error " + r.status);
+                        var m =
+                            (body.error && body.error.message) ||
+                            "Error " + r.status;
+                        var c = body.error && body.error.code;
+                        if (c) m += " [" + c + "]";
+                        throw new Error(m);
                     }
                     return body;
                 });
             })
             .then(function (body) {
-                var d = body.data || {};
-                msg.textContent = "Nuevo inventario para producto " + d.id_producto + ": " + d.cantidad + " uds.";
-                msg.className = "alert alert-success py-2 small";
+                    var d = body.data || {};
+                    var warnings = Array.isArray(d.warnings) ? d.warnings : [];
+                    msg.textContent = "Nuevo inventario para producto " + d.id_producto + ": " + d.cantidad + " uds.";
+                    msg.className = warnings.length
+                        ? "alert alert-warning py-2 small"
+                        : "alert alert-success py-2 small";
+                    if (warnings.length) {
+                        msg.textContent += " " + warnings.join(" ");
+                    }
             })
             .catch(function (e) {
                 msg.textContent = e.message || "Error";
                 msg.className = "alert alert-danger py-2 small";
             });
         msg.classList.remove("d-none");
+    });
+
+    window.addEventListener("DOMContentLoaded", function () {
+        void ensureAdminAccess();
     });
 })();
 </script>

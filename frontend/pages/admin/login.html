@@ -2,13 +2,145 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=../login.html?redirect=/pages/admin/stock.html">
-    <title>Redirigiendo…</title>
-    <script>
-        window.location.replace("../login.html?redirect=" + encodeURIComponent("/pages/admin/stock.html"));
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso de administración | Punto Venta Muebles</title>
+    <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(31, 122, 79, 0.24), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(201, 162, 39, 0.2), transparent 30%),
+                linear-gradient(160deg, #091018 0%, #0d271b 45%, #f4f6f8 45%, #f4f6f8 100%);
+        }
+
+        .admin-gateway {
+            min-height: 100vh;
+        }
+
+        .admin-card {
+            border: 0;
+            border-radius: 1.5rem;
+            box-shadow: 0 24px 70px rgba(15, 21, 28, 0.2);
+            overflow: hidden;
+        }
+
+        .admin-panel {
+            background: linear-gradient(160deg, rgba(16, 21, 28, 0.98), rgba(13, 52, 35, 0.98));
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-panel::before {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            top: -90px;
+            right: -90px;
+            background: rgba(201, 162, 39, 0.14);
+        }
+
+        .admin-panel::after {
+            content: "";
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border-radius: 999px;
+            bottom: -70px;
+            left: -70px;
+            background: rgba(31, 122, 79, 0.2);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.42rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .pill-admin {
+            background: rgba(31, 122, 79, 0.22);
+            color: #c8f1dc;
+        }
+
+        .admin-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .admin-features li {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.95rem;
+        }
+
+        .feature-dot {
+            width: 0.8rem;
+            height: 0.8rem;
+            border-radius: 50%;
+            margin-top: 0.35rem;
+            background: #c9a227;
+            box-shadow: 0 0 0 6px rgba(201, 162, 39, 0.08);
+        }
+    </style>
 </head>
 <body>
-    <p class="p-3 text-muted small">Redirigiendo al inicio de sesión… <a href="../login.html?redirect=%2Fpages%2Fadmin%2Fstock.html">Continuar</a></p>
+<div class="container admin-gateway d-flex align-items-center py-4">
+    <div class="row g-0 w-100 justify-content-center">
+        <div class="col-xl-10">
+            <div class="card admin-card">
+                <div class="row g-0">
+                    <div class="col-lg-5 admin-panel p-4 p-md-5 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="pill pill-admin mb-3">Portal de administración</span>
+                            <h1 class="display-6 fw-bold mb-3">Acceso al panel de abasto</h1>
+                            <p class="lead mb-0 text-white-75">Zona reservada para personal autorizado. Desde aquí se entra a la tienda admin y a los ajustes de inventario.</p>
+                        </div>
+                        <div class="mt-4 pt-2">
+                            <ul class="admin-features">
+                                <li><span class="feature-dot"></span><span>Validación de cuenta y rol antes de abrir el panel.</span></li>
+                                <li><span class="feature-dot"></span><span>Acceso al carrito de abasto y al ajuste por ID.</span></li>
+                                <li><span class="feature-dot"></span><span>Salida rápida hacia la tienda pública cuando lo necesites.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-7 bg-white p-4 p-md-5">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                            <div>
+                                <span class="pill bg-success-subtle text-success-emphasis mb-3">Administrador</span>
+                                <h2 class="h3 fw-bold mb-2">Entrar con credenciales</h2>
+                                <p class="text-muted mb-0">Usa tu correo y contraseña para abrir la sesión de administración.</p>
+                            </div>
+                            <a href="../login.html?mode=admin&redirect=%2Fpages%2Fadmin%2Ftienda.html" class="btn btn-success btn-sm rounded-pill">Ir al login</a>
+                        </div>
+
+                        <div class="alert alert-warning small mb-4">
+                            Si ya tienes una sesión válida, puedes ir directo al panel. Si no, primero autentícate para validar el rol.
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex">
+                            <a href="../login.html?mode=admin&redirect=%2Fpages%2Fadmin%2Ftienda.html" class="btn btn-success btn-lg px-4">Continuar al login</a>
+                            <a href="/index.html" class="btn btn-outline-secondary btn-lg px-4">Ir a tienda cliente</a>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-4 small text-muted">
+                            <span class="badge text-bg-light border">Abasto</span>
+                            <span class="badge text-bg-light border">Inventario</span>
+                            <span class="badge text-bg-light border">Control de acceso</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -51,6 +51,11 @@ module.exports = {
     ),
     /** Máximo en carrito para sesión autenticada como administrador. */
     cartMaxAdmin: parseInt(process.env.CART_MAX_ADMIN || "500", 10),
+    /** Tope de inventario por producto (entradas admin / abasto vía carrito). */
+    stockCeilingPerProduct: parseInt(
+        process.env.STOCK_CEILING_PER_PRODUCT || "999",
+        10
+    ),
     /** @deprecated usar cartMaxClient; se mantiene por compatibilidad. */
     stockMax: parseInt(
         process.env.CART_MAX_CLIENT || process.env.STOCK_MAX || "30",

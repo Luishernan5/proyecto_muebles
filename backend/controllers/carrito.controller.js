@@ -56,14 +56,53 @@ const vaciar = asyncHandler(async (req, res) => {
     res.json({ ok: true, data });
 });
 
-const checkout = asyncHandler(async (req, res) => {
+/** Venta: invitado o cliente (descuenta inventario). */
+const checkoutCompra = asyncHandler(async (req, res) => {
     const sesionId = sessionFromRequest(req);
-    const idCliente =
-        req.usuario && req.usuario.rol === "cliente"
-            ? req.usuario.id_usuario
-            : null;
-    const result = await carritoService.checkout(sesionId, idCliente);
-    res.json({ ok: true, data: result });
+    const data = await carritoService.checkoutCompra(
+        sesionId,
+        req.usuario || null
+    );
+    res.json({ ok: true, data });
 });
 
-module.exports = { listar, agregar, actualizar, eliminar, vaciar, checkout };
+/** Abasto: solo administrador (incrementa inventario). */
+const checkoutAbasto = asyncHandler(async (req, res) => {
+    const sesionId = sessionFromRequest(req);
+    const data = await carritoService.checkoutAbasto(
+        sesionId,
+        req.usuario.id_usuario
+    );
+    res.json({ ok: true, data });
+});
+
+/**
+ * Compatibilidad: despacha según rol (admin → abasto, resto → compra).
+ * Preferible usar POST /compra o POST /abasto de forma explícita.
+ */
+const checkoutLegacy = asyncHandler(async (req, res) => {
+    const sesionId = sessionFromRequest(req);
+    if (req.usuario && req.usuario.rol === "admin") {
+        const data = await carritoService.checkoutAbasto(
+            sesionId,
+            req.usuario.id_usuario
+        );
+        return res.json({ ok: true, data });
+    }
+    const data = await carritoService.checkoutCompra(
+        sesionId,
+        req.usuario || null
+    );
+    res.json({ ok: true, data });
+});
+
+module.exports = {
+    listar,
+    agregar,
+    actualizar,
+    eliminar,
+    vaciar,
+    checkoutCompra,
+    checkoutAbasto,
+    checkoutLegacy,
+};

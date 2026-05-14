@@ -129,36 +129,108 @@
         }
     }
 
-    function init() {
-        inyectarEstilos();
-        fetch(apiRoot() + "/productos", { credentials: "same-origin" })
-            .then(function (r) {
-                if (!r.ok) throw new Error("HTTP " + r.status);
-                return r.json();
-            })
-            .then(function (body) {
-                var arr = [];
-                if (body && Array.isArray(body.data)) arr = body.data;
-                else if (Array.isArray(body)) arr = body;
-                else if (body && body.productos && Array.isArray(body.productos)) {
-                    arr = body.productos;
-                }
-                var mapa = {};
-                for (var i = 0; i < arr.length; i++) {
-                    var p = arr[i];
-                    var id = p.id_producto != null ? p.id_producto : p.id;
-                    if (id != null) mapa[id] = p;
-                }
-                aplicarMapa(mapa);
-            })
-            .catch(function () {
-                /* deja el texto estático de la página */
+    function mensajeFalloProductos(status, body) {
+        var code = body && body.error && body.error.code;
+        var msg = body && body.error && body.error.message;
+        var base =
+            msg ||
+            "No se pudo cargar el inventario desde el servidor (HTTP " +
+                (status || "?") +
+                ").";
+        if (code) {
+            return base + " [" + code + "]";
+        }
+        if (status === 400) {
+            return (
+                base +
+                " Revisa la URL de la API (window.PVM_API) o los parámetros enviados."
+            );
+        }
+        if (status === 0 || status >= 500) {
+            return (
+                base +
+                " Comprueba que el backend esté en ejecución y la base de datos accesible."
+            );
+        }
+        return base;
+    }
+
+    function notificarErrorStock(texto) {
+        if (window.__pvmStockErrorShown) return;
+        window.__pvmStockErrorShown = true;
+        if (typeof Swal !== "undefined") {
+            Swal.fire({
+                icon: "warning",
+                title: "Inventario en vivo",
+                text: texto,
+                confirmButtonColor: "#c9a227",
             });
+            return;
+        }
+        try {
+            console.warn("[PVM stock-tienda]", texto);
+        } catch (e) {
+            /* ignore */
+        }
+    }
+
+    async function refrescarStockDesdeApi() {
+        inyectarEstilos();
+        try {
+            var r = await fetch(apiRoot() + "/productos", {
+                credentials: "same-origin",
+            });
+            var text = await r.text();
+            var body = {};
+            try {
+                body = text ? JSON.parse(text) : {};
+            } catch (e) {
+                body = { raw: text };
+            }
+            if (!r.ok) {
+                notificarErrorStock(mensajeFalloProductos(r.status, body));
+                return;
+            }
+            var arr = [];
+            if (body && Array.isArray(body.data)) arr = body.data;
+            else if (Array.isArray(body)) arr = body;
+            else if (body && body.productos && Array.isArray(body.productos)) {
+                arr = body.productos;
+            }
+            var mapa = {};
+            for (var i = 0; i < arr.length; i++) {
+                var p = arr[i];
+                var id = p.id_producto != null ? p.id_producto : p.id;
+                if (id != null) mapa[id] = p;
+            }
+            aplicarMapa(mapa);
+        } catch (e) {
+            notificarErrorStock(
+                "Error de red al consultar productos: " +
+                    (e && e.message ? e.message : "desconocido")
+            );
+        }
+    }
+
+    async function init() {
+        await refrescarStockDesdeApi();
+
+        // Refresca inventario cuando el carrito/admin notifica cambios de stock.
+        window.addEventListener("pvm:stock-refresh", function () {
+            void refrescarStockDesdeApi();
+        });
+
+        // Refresco suave para mantener vista sincronizada sin recargar.
+        window.setInterval(function () {
+            void refrescarStockDesdeApi();
+        }, 12000);
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
+        document.addEventListener("DOMContentLoaded", function () {
+            void init();
+        });
     } else {
-        init();
+        void init();
     }
 })();

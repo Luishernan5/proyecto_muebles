@@ -8,6 +8,24 @@
 
     <title>Punto Venta Muebles</title>
 
+    <script>
+    (function () {
+        try {
+            var k = "pvm_jwt";
+            var t = localStorage.getItem(k);
+            if (!t) return;
+            var parts = t.split(".");
+            if (parts.length < 2) return;
+            var b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            while (b64.length % 4) b64 += "=";
+            var j = JSON.parse(atob(b64));
+            if (String(j.rol || "").toLowerCase() === "admin") {
+                window.location.replace("/pages/admin/tienda.html");
+            }
+        } catch (e) { /* ignorar */ }
+    })();
+    </script>
+
     <!-- BOOTSTRAP -->
     <link href="/vendor/bootstrap5/bootstrap.min.css"
         rel="stylesheet">
@@ -386,9 +404,9 @@
 
         <p class="small mb-0 opacity-75">
 
-            <a href="pages/login.html" class="text-white-50 text-decoration-none me-3">Iniciar sesión</a>
+            <a href="pages/login.html" class="text-white-50 text-decoration-none me-3">Iniciar sesión (cliente)</a>
 
-            <a href="pages/login.html?redirect=%2Fpages%2Fadmin%2Fstock.html" class="text-white-50 text-decoration-none">Administración</a>
+            <a href="pages/admin/login.html" class="text-white-50 text-decoration-none">Panel administración (abasto)</a>
 
         </p>
 
@@ -518,6 +536,7 @@
 
     <!-- JS CARRITO -->
 
+    <script>window.PVM_APP_CONTEXT = "tienda_cliente";</script>
     <script src="js/carrito.js"></script>
     <script src="js/stock-tienda.js"></script>
 

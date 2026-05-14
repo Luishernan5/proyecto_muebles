@@ -2,6 +2,7 @@
 
 const { sql, getPool } = require("../config/database");
 const { AppError } = require("../utils/errors");
+const env = require("../config/env");
 
 /**
  * Suma (o resta) unidades al inventario. Solo administradores.
@@ -31,6 +32,7 @@ async function ajustarStock(idProducto, delta, comentario, idAdmin) {
     const transaction = new sql.Transaction(pool);
     await transaction.begin();
     try {
+        const warnings = [];
         const req0 = new sql.Request(transaction);
         req0.input("prod", sql.Int, id);
         const chk = await req0.query(
@@ -43,15 +45,50 @@ async function ajustarStock(idProducto, delta, comentario, idAdmin) {
             throw new AppError("Producto o stock no encontrado", 404, "NOT_FOUND");
         }
 
-        const req1 = new sql.Request(transaction);
-        req1.input("prod", sql.Int, id);
-        req1.input("d", sql.Int, d);
-        const upd = await req1.query(
-            `UPDATE Stock
+        const cap = env.stockCeilingPerProduct;
+        const currentQty = Number(chk.recordset[0].cantidad || 0);
+        let upd;
+        if (d > 0) {
+            const applied = Math.max(0, Math.min(d, cap - currentQty));
+            if (applied <= 0) {
+                warnings.push(
+                    `El producto #${id} ya alcanzó el máximo permitido (${cap} uds.). No se agregó inventario adicional.`
+                );
+                await transaction.commit();
+                return {
+                    id_producto: id,
+                    cantidad: currentQty,
+                    warnings,
+                };
+            }
+            if (applied < d) {
+                warnings.push(
+                    `Solo se agregaron ${applied} de ${d} uds. porque el resto superaba el máximo permitido (${cap} uds.).`
+                );
+            }
+            const reqPos = new sql.Request(transaction);
+            reqPos.input("prod", sql.Int, id);
+            reqPos.input("d", sql.Int, applied);
+            reqPos.input("cap", sql.Int, cap);
+            upd = await reqPos.query(
+                `UPDATE Stock
+       SET cantidad = cantidad + @d,
+           fecha_actualizacion = GETDATE()
+       WHERE id_producto = @prod
+         AND cantidad + @d >= 0
+         AND cantidad + @d <= @cap`
+            );
+        } else {
+            const reqNeg = new sql.Request(transaction);
+            reqNeg.input("prod", sql.Int, id);
+            reqNeg.input("d", sql.Int, d);
+            upd = await reqNeg.query(
+                `UPDATE Stock
        SET cantidad = cantidad + @d,
            fecha_actualizacion = GETDATE()
        WHERE id_producto = @prod AND cantidad + @d >= 0`
-        );
+            );
+        }
         if (upd.rowsAffected[0] === 0) {
             throw new AppError(
                 "El ajuste dejaría el inventario en negativo",
@@ -64,15 +101,26 @@ async function ajustarStock(idProducto, delta, comentario, idAdmin) {
             `SELECT CASE WHEN OBJECT_ID(N'dbo.MovimientosStock', N'U') IS NOT NULL THEN 1 ELSE 0 END AS t`
         );
         if (Number(chkMov.recordset[0].t) === 1) {
-            const rM = new sql.Request(transaction);
-            rM.input("prod", sql.Int, id);
-            rM.input("tipo", sql.NVarChar(20), tipo);
-            rM.input("cant", sql.Int, cantMov);
-            rM.input("com", sql.NVarChar(255), com);
-            await rM.query(
-                `INSERT INTO MovimientosStock (id_producto, tipo, cantidad, id_referencia, comentario)
+            try {
+                const rM = new sql.Request(transaction);
+                rM.input("prod", sql.Int, id);
+                rM.input("tipo", sql.NVarChar(20), tipo);
+                rM.input("cant", sql.Int, cantMov);
+                rM.input("com", sql.NVarChar(255), com);
+                await rM.query(
+                    `INSERT INTO MovimientosStock (id_producto, tipo, cantidad, id_referencia, comentario)
          VALUES (@prod, @tipo, @cant, NULL, @com)`
-            );
+                );
+            } catch (movErr) {
+                const num = movErr.number || movErr.originalError?.info?.number;
+                if (num === 547) {
+                    warnings.push(
+                        "El inventario se actualizó, pero no se pudo registrar el movimiento histórico por una restricción de base de datos."
+                    );
+                } else {
+                    throw movErr;
+                }
+            }
         }
 
         const req2 = new sql.Request(transaction);
@@ -85,6 +133,7 @@ async function ajustarStock(idProducto, delta, comentario, idAdmin) {
         return {
             id_producto: id,
             cantidad: Number(out.recordset[0].cantidad),
+            warnings,
         };
     } catch (e) {
         await transaction.rollback();

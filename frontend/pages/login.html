@@ -5,34 +5,197 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión | Punto Venta Muebles</title>
     <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --pvm-auth-ink: #10151c;
+            --pvm-auth-accent: #c9a227;
+            --pvm-auth-accent-2: #1f7a4f;
+        }
+
+        body.pvm-auth-page {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(201, 162, 39, 0.18), transparent 32%),
+                radial-gradient(circle at right bottom, rgba(31, 122, 79, 0.18), transparent 28%),
+                linear-gradient(135deg, #091018 0%, #10151c 48%, #f4f6f8 48%, #f4f6f8 100%);
+        }
+
+        .pvm-auth-shell {
+            min-height: 100vh;
+        }
+
+        .pvm-auth-hero {
+            background: linear-gradient(160deg, rgba(16, 21, 28, 0.96), rgba(13, 52, 35, 0.96));
+            color: #fff;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.24);
+            position: relative;
+            overflow: hidden;
+            min-height: 100%;
+        }
+
+        .pvm-auth-hero::before,
+        .pvm-auth-hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            background: rgba(201, 162, 39, 0.14);
+            pointer-events: none;
+        }
+
+        .pvm-auth-hero::before {
+            width: 220px;
+            height: 220px;
+            right: -80px;
+            top: -80px;
+        }
+
+        .pvm-auth-hero::after {
+            width: 160px;
+            height: 160px;
+            left: -60px;
+            bottom: -60px;
+            background: rgba(31, 122, 79, 0.18);
+        }
+
+        .pvm-auth-card {
+            border: 0;
+            border-radius: 1.5rem;
+            box-shadow: 0 18px 50px rgba(15, 21, 28, 0.16);
+        }
+
+        .pvm-auth-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .pvm-auth-pill.admin {
+            background: rgba(31, 122, 79, 0.22);
+            color: #c8f1dc;
+        }
+
+        .pvm-auth-pill.client {
+            background: rgba(201, 162, 39, 0.16);
+            color: #ffe8a0;
+        }
+
+        .pvm-auth-steps {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0 0;
+        }
+
+        .pvm-auth-steps li {
+            display: flex;
+            gap: 0.85rem;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .pvm-auth-steps .dot {
+            flex: 0 0 auto;
+            width: 0.8rem;
+            height: 0.8rem;
+            border-radius: 50%;
+            margin-top: 0.4rem;
+            background: var(--pvm-auth-accent);
+            box-shadow: 0 0 0 6px rgba(201, 162, 39, 0.08);
+        }
+
+        .pvm-auth-meta {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .pvm-auth-form-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .pvm-auth-switch a {
+            text-decoration: none;
+        }
+    </style>
 </head>
-<body class="bg-light d-flex align-items-center min-vh-100 py-4">
-<div class="container" style="max-width: 440px">
-    <div class="card shadow border-0">
-        <div class="card-body p-4 p-md-5">
-            <h1 class="h4 fw-bold mb-1">Iniciar sesión</h1>
-            <p class="text-muted small mb-4">Clientes y administradores usan el mismo acceso; el sistema redirige según tu rol.</p>
-            <form id="f-login" novalidate>
-                <div class="mb-3">
-                    <label class="form-label" for="email">Correo electrónico</label>
-                    <input type="email" class="form-control" id="email" required autocomplete="username">
+<body class="pvm-auth-page d-flex align-items-center py-4">
+<div class="container pvm-auth-shell py-3 py-lg-5">
+    <div class="row g-4 align-items-stretch">
+        <div class="col-lg-6">
+            <div class="pvm-auth-hero p-4 p-md-5 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <span id="hero-pill" class="pvm-auth-pill admin mb-3">Portal de abasto</span>
+                    <h1 id="hero-title" class="display-6 fw-bold mb-3">Acceso de administración</h1>
+                    <p id="hero-text" class="lead mb-0 pvm-auth-meta">
+                        Entrada controlada para administrar inventario, revisar pedidos y operar el carrito de abasto con una sesión autenticada.
+                    </p>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label" for="password">Contraseña</label>
-                    <input type="password" class="form-control" id="password" required autocomplete="current-password">
+
+                <div class="mt-4 pt-2">
+                    <ul class="pvm-auth-steps">
+                        <li><span class="dot"></span><span>Identifica tu rol y entra al espacio correcto.</span></li>
+                        <li><span class="dot"></span><span>Si eres cliente, accedes al catálogo y al carrito de compras.</span></li>
+                        <li><span class="dot"></span><span>Si eres administrador, vas al panel de abasto con inventario validado.</span></li>
+                    </ul>
                 </div>
-                <div id="err" class="alert alert-danger py-2 small d-none" role="alert"></div>
-                <button type="submit" class="btn btn-dark w-100 py-2">Entrar</button>
-            </form>
-            <div class="d-grid gap-2 mt-3">
-                <a href="/index.html" class="btn btn-outline-secondary btn-sm">Ir a la tienda sin iniciar sesión</a>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-6">
+                        <div class="bg-white bg-opacity-10 rounded-4 p-3 border border-white border-opacity-10">
+                            <div class="small text-uppercase text-white-50">Acceso</div>
+                            <div class="fw-semibold">Cliente o admin</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-white bg-opacity-10 rounded-4 p-3 border border-white border-opacity-10">
+                            <div class="small text-uppercase text-white-50">Sesión</div>
+                            <div class="fw-semibold">JWT seguro</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="small text-center text-muted mt-4 mb-0">
-                ¿No tienes cuenta? <a href="registro.html">Crear cuenta de cliente</a>
-            </p>
-            <p class="small text-center mt-2 mb-0">
-                <a href="/index.html" class="text-decoration-none text-muted">Catálogo principal</a>
-            </p>
+        </div>
+
+        <div class="col-lg-6 d-flex">
+            <div class="card pvm-auth-card w-100">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                        <div>
+                            <div id="form-pill" class="pvm-auth-pill client mb-3">Cliente</div>
+                            <h2 id="form-title" class="h3 fw-bold mb-2">Iniciar sesión</h2>
+                            <p id="form-text" class="text-muted mb-0">Ingresa con tu correo y contraseña para continuar.</p>
+                        </div>
+                        <a href="/index.html" class="btn btn-outline-secondary btn-sm rounded-pill">Ver tienda</a>
+                    </div>
+
+                    <form id="f-login" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label pvm-auth-form-label" for="email">Correo electrónico</label>
+                            <input type="email" class="form-control form-control-lg" id="email" required autocomplete="username" placeholder="correo@ejemplo.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label pvm-auth-form-label" for="password">Contraseña</label>
+                            <input type="password" class="form-control form-control-lg" id="password" required autocomplete="current-password" placeholder="••••••••">
+                        </div>
+                        <div id="err" class="alert alert-danger py-2 small d-none" role="alert"></div>
+                        <button type="submit" class="btn btn-dark w-100 py-3 fw-semibold" id="btn-entrar">Entrar</button>
+                    </form>
+
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="/index.html" class="btn btn-outline-secondary btn-sm py-2">Seguir como visitante</a>
+                        <a href="/pages/admin/login.html" class="btn btn-outline-success btn-sm py-2">Acceso de administración</a>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4 pvm-auth-switch">
+                        <p class="small text-muted mb-0">¿No tienes cuenta? <a href="registro.html">Crear cuenta de cliente</a></p>
+                        <p class="small text-muted mb-0"><a href="/index.html">Volver al catálogo principal</a></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -43,48 +206,129 @@
     function apiRoot() {
         return (window.PVM_API && String(window.PVM_API).replace(/\/$/, "")) || "/api";
     }
+    function getMode() {
+        var q = new URLSearchParams(window.location.search);
+        var mode = String(q.get("mode") || "").toLowerCase();
+        var redirect = String(q.get("redirect") || "");
+        if (mode === "admin") {
+            return "admin";
+        }
+        if (mode === "client") {
+            return "client";
+        }
+        if (/^\/pages\/admin\//i.test(redirect)) {
+            return "admin";
+        }
+        return "client";
+    }
+    function isAdminPath(url) {
+        return typeof url === "string" && /^\/pages\/admin\//i.test(url);
+    }
+    function isSafeClientPath(url) {
+        return typeof url === "string" && /^\//.test(url) && !isAdminPath(url);
+    }
     function redirectSeguro(url, defecto) {
         if (!url || typeof url !== "string") return defecto;
         if (/^https?:/i.test(url) || url.indexOf("//") === 0) return defecto;
         if (url.charAt(0) !== "/") return defecto;
         return url;
     }
-    document.getElementById("f-login").addEventListener("submit", function (ev) {
+    function destinoParaRol(rol, pedido) {
+        var r = String(rol || "").toLowerCase();
+        var target = redirectSeguro(pedido, null);
+        if (r === "admin") {
+            if (isAdminPath(target)) {
+                return target;
+            }
+            return "/pages/admin/tienda.html";
+        }
+        if (isSafeClientPath(target)) {
+            return target;
+        }
+        return "/index.html";
+    }
+
+    function aplicarModoVisual() {
+        var mode = getMode();
+        var heroPill = document.getElementById("hero-pill");
+        var heroTitle = document.getElementById("hero-title");
+        var heroText = document.getElementById("hero-text");
+        var formPill = document.getElementById("form-pill");
+        var formTitle = document.getElementById("form-title");
+        var formText = document.getElementById("form-text");
+        if (mode === "admin") {
+            if (heroPill) heroPill.className = "pvm-auth-pill admin mb-3";
+            if (heroPill) heroPill.textContent = "Portal de abasto";
+            if (heroTitle) heroTitle.textContent = "Acceso de administración";
+            if (heroText) {
+                heroText.textContent = "Sesión reservada para administradores. Desde aquí se entra al panel de abasto, al ajuste de inventario y al carrito de entrada.";
+            }
+            if (formPill) formPill.className = "pvm-auth-pill admin mb-3";
+            if (formPill) formPill.textContent = "Administrador";
+            if (formTitle) formTitle.textContent = "Entrar al panel";
+            if (formText) formText.textContent = "Autentícate con tu cuenta de administrador para continuar.";
+        } else {
+            if (heroPill) heroPill.className = "pvm-auth-pill client mb-3";
+            if (heroPill) heroPill.textContent = "Portal cliente";
+            if (heroTitle) heroTitle.textContent = "Acceso de cliente";
+            if (heroText) {
+                heroText.textContent = "Ingresa a tu cuenta para guardar tu carrito, comprar con seguridad y revisar tu historial en la tienda.";
+            }
+            if (formPill) formPill.className = "pvm-auth-pill client mb-3";
+            if (formPill) formPill.textContent = "Cliente";
+            if (formTitle) formTitle.textContent = "Iniciar sesión";
+            if (formText) formText.textContent = "Usa tu cuenta de cliente para entrar al catálogo y al carrito.";
+        }
+    }
+
+    aplicarModoVisual();
+
+    var form = document.getElementById("f-login");
+    var btnEntrar = document.getElementById("btn-entrar");
+    form.addEventListener("submit", function (ev) {
         ev.preventDefault();
-        var err = document.getElementById("err");
-        err.classList.add("d-none");
-        var email = document.getElementById("email").value.trim();
-        var password = document.getElementById("password").value;
-        var q = new URLSearchParams(window.location.search);
-        var pedido = redirectSeguro(q.get("redirect"), null);
-        fetch(apiRoot() + "/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: email, password: password }),
-        })
-            .then(function (r) {
-                return r.json().then(function (body) {
-                    if (!r.ok) {
-                        throw new Error((body.error && body.error.message) || "Error " + r.status);
-                    }
-                    return body;
+        void (async function () {
+            var err = document.getElementById("err");
+            err.classList.add("d-none");
+            var email = document.getElementById("email").value.trim();
+            var password = document.getElementById("password").value;
+            var q = new URLSearchParams(window.location.search);
+            var pedido = redirectSeguro(q.get("redirect"), null);
+            btnEntrar.disabled = true;
+            try {
+                var r = await fetch(apiRoot() + "/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email, password: password }),
                 });
-            })
-            .then(function (body) {
+                var text = await r.text();
+                var body = {};
+                try {
+                    body = text ? JSON.parse(text) : {};
+                } catch (e) {
+                    body = {};
+                }
+                if (!r.ok) {
+                    var m =
+                        (body.error && body.error.message) ||
+                        "Error " + r.status;
+                    var c = body.error && body.error.code;
+                    if (c) m += " [" + c + "]";
+                    throw new Error(m);
+                }
                 var t = body.data && body.data.token;
                 var u = body.data && body.data.usuario;
                 if (!t || !u) throw new Error("Respuesta inválida del servidor");
                 localStorage.setItem(JWT_KEY, t);
-                if (u.rol === "admin") {
-                    window.location.href = pedido || "/pages/admin/stock.html";
-                } else {
-                    window.location.href = pedido || "/index.html";
-                }
-            })
-            .catch(function (e) {
+                var rol = String(u.rol || "").toLowerCase();
+                window.location.href = destinoParaRol(rol, pedido);
+            } catch (e) {
                 err.textContent = e.message || "No se pudo iniciar sesión";
                 err.classList.remove("d-none");
-            });
+            } finally {
+                btnEntrar.disabled = false;
+            }
+        })();
     });
 })();
 </script>

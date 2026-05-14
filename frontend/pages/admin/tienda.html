@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración — Abasto | Punto Venta Muebles</title>
+    <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/tienda.css">
+    <style>
+        .navbar-pvm-admin { background: linear-gradient(90deg, #0f5132 0%, #198754 55%, #157347 100%) !important; }
+        .navbar-pvm-admin .nav-link { color: rgba(255,255,255,.92) !important; }
+        .navbar-pvm-admin .navbar-brand { color: #fff !important; }
+        .pvm-admin-badge { font-size: 0.7rem; vertical-align: middle; }
+        #pvm-gate-loading { min-height: 100vh; }
+    </style>
+    <script>window.PVM_APP_CONTEXT = "tienda_admin";</script>
+</head>
+<body>
+<div id="pvm-gate-loading" class="d-flex align-items-center justify-content-center bg-dark text-white flex-column gap-3">
+    <div class="spinner-border text-success" role="status" aria-hidden="true"></div>
+    <p class="mb-0 small">Validando acceso de administrador…</p>
+</div>
+
+<div id="pvm-admin-app" class="d-none">
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-pvm-admin">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="tienda.html">
+            <i class="fa-solid fa-warehouse me-2"></i>PVM <span class="pvm-admin-badge badge bg-warning text-dark ms-1">Abasto</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuAdmin">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="menuAdmin">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link active" href="tienda.html">Inicio abasto</a></li>
+                <li class="nav-item"><a class="nav-link" href="#categorias">Categorías</a></li>
+                <li class="nav-item"><a class="nav-link" href="stock.html">Ajuste por ID</a></li>
+                <li class="nav-item"><a class="nav-link" href="/index.html">Tienda cliente</a></li>
+                <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+                    <button class="btn btn-warning position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas">
+                        <i class="fa-solid fa-dolly"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" data-carrito-contador>0</span>
+                    </button>
+                </li>
+                <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                    <button type="button" class="btn btn-outline-light btn-sm" id="btn-cerrar-admin">Cerrar sesión</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<section class="hero d-flex align-items-center" style="padding-top: 5rem;">
+    <div class="container text-center text-white">
+        <h1 class="display-5 fw-bold">Zona administración</h1>
+        <p class="lead mt-3">Aquí registras <strong>entradas a inventario</strong> (abasto). El flujo de venta al público está en la tienda cliente.</p>
+        <a href="#categorias" class="btn btn-warning btn-lg mt-2 px-5">Ir al catálogo</a>
+    </div>
+</section>
+
+<section class="container py-5" id="categorias">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Catálogo (mismo catálogo que cliente)</h2>
+        <p class="text-muted">Añade productos al carrito de abasto y confirma la entrada a inventario.</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-4 col-md-6">
+            <div class="card categoria-card border-0 shadow">
+                <img src="/img/banner/camas.png" class="card-img-top" alt="Camas">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold">Camas</h3>
+                    <p>Individual, King Size y Matrimonial.</p>
+                    <a href="../camas/camas.html" class="btn btn-success">Ver camas</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card categoria-card border-0 shadow">
+                <img src="/img/banner/muebles.png" class="card-img-top" alt="Muebles">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold">Muebles</h3>
+                    <p>Closets, escritorios, tocadores y más.</p>
+                    <a href="../muebles/muebles.html" class="btn btn-success">Ver muebles</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card categoria-card border-0 shadow">
+                <img src="/img/banner/comedor.png" class="card-img-top" alt="Comedor">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold">Comedor</h3>
+                    <p>Mesas, sillas y conjuntos.</p>
+                    <a href="../comedor/comedor.html" class="btn btn-success">Ver comedor</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="footer text-center text-white py-4 mt-5">
+    <h4 class="fw-bold">Punto Venta Muebles</h4>
+    <p class="small mb-2 opacity-75">Apartado de administración — solo abasto e inventario.</p>
+    <p class="small mb-0">
+        <a href="/index.html" class="text-white-50 text-decoration-none me-3">Tienda cliente</a>
+        <a href="login.html" class="text-white-50 text-decoration-none">Cambiar usuario</a>
+    </p>
+</footer>
+
+<button type="button" class="btn btn-success carrito-btn carrito-flotante shadow" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas" aria-label="Abrir carrito de abasto">
+    <i class="fa-solid fa-dolly"></i>
+    <span class="badge-carrito" data-carrito-contador>0</span>
+</button>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="carritoCanvas">
+    <div class="offcanvas-header">
+        <h4 class="fw-bold"><i class="fa-solid fa-dolly"></i> Carrito de abasto</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="lista-carrito">
+            <p class="text-muted">Tu carrito de abasto está vacío.</p>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between mb-2"><span>Subtotal referencia:</span><span>$<span id="subtotal">0.00</span></span></div>
+        <div class="d-flex justify-content-between mb-2"><span>IVA (16%):</span><span>$<span id="iva">0.00</span></span></div>
+        <div class="d-flex justify-content-between fw-bold fs-5"><span>Total referencia:</span><span>$<span id="total">0.00</span></span></div>
+        <button type="button" class="btn btn-success w-100 mt-4" onclick="finalizarCompra()">Registrar entrada a inventario</button>
+        <button type="button" class="btn btn-outline-danger w-100 mt-2" onclick="vaciarCarrito()">Vaciar carrito</button>
+    </div>
+</div>
+
+</div>
+
+<script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    var JWT_KEY = "pvm_jwt";
+    function apiRoot() {
+        return (window.PVM_API && String(window.PVM_API).replace(/\/$/, "")) || "/api";
+    }
+    document.getElementById("btn-cerrar-admin").addEventListener("click", function () {
+        try { localStorage.removeItem(JWT_KEY); } catch (e) {}
+        window.location.href = "../login.html?redirect=" + encodeURIComponent("/pages/admin/tienda.html");
+    });
+    window.addEventListener("DOMContentLoaded", function () {
+        void (async function () {
+            var gate = document.getElementById("pvm-gate-loading");
+            var app = document.getElementById("pvm-admin-app");
+            try {
+                var tok = localStorage.getItem(JWT_KEY);
+                if (!tok) throw new Error("no token");
+                var r = await fetch(apiRoot() + "/auth/me", {
+                    headers: { Authorization: "Bearer " + tok },
+                });
+                var body = await r.json().catch(function () { return {}; });
+                if (!r.ok || !body.data) {
+                    throw new Error("not ok");
+                }
+                var rol = String(body.data.rol || "").toLowerCase();
+                if (rol !== "admin") {
+                    window.location.replace("/index.html");
+                    return;
+                }
+                gate.classList.add("d-none");
+                app.classList.remove("d-none");
+                if (typeof window.actualizarCarrito === "function") {
+                    window.actualizarCarrito();
+                }
+            } catch (e) {
+                window.location.replace("login.html");
+            }
+        })();
+    });
+})();
+</script>
+<script src="/js/carrito.js"></script>
+<script src="/js/stock-tienda.js"></script>
+</body>
+</html>

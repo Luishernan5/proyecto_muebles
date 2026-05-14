@@ -3,8 +3,10 @@
  *
  * Config (opcional):
  *   window.PVM_API = '/api';
- *   window.PVM_IMAGEN_POR_PRODUCTO = { 1: '/img/mi-foto.jpg', ... }; // sobrescribe miniaturas
+ *   window.PVM_APP_CONTEXT = 'tienda_cliente' | 'tienda_admin' (panel abasto; si eres admin por JWT también se usa abasto en catálogo).
+ *   window.PVM_IMAGEN_POR_PRODUCTO = { 1: '/img/mi-foto.jpg', ... };
  *
+ * Finalizar: POST /api/carrito/compra (cliente/invitado) o POST /api/carrito/abasto (admin).
  * API pública:
  *   agregarCarrito(idProducto [, cantidad])
  *   eliminarProducto(idCarrito)
@@ -19,6 +21,9 @@
     "use strict";
 
     var SESSION_KEY = "pvm_session_id_v2";
+    var JWT_KEY = "pvm_jwt";
+    var SESSION_MIN = 8;
+    var SESSION_MAX = 100;
 
     /** Miniaturas reales (mismas rutas que en las páginas HTML). Rutas absolutas desde la raíz del sitio. */
     var IMG = "/img/";
@@ -90,19 +95,99 @@
 
     function getSessionId() {
         try {
-            var s = localStorage.getItem(SESSION_KEY);
-            if (s && s.length >= 8) {
+            var raw = localStorage.getItem(SESSION_KEY);
+            var s = raw ? String(raw).trim() : "";
+            if (s.length >= SESSION_MIN && s.length <= SESSION_MAX) {
                 return s;
+            }
+            if (s) {
+                try {
+                    localStorage.removeItem(SESSION_KEY);
+                } catch (e2) {
+                    /* ignore */
+                }
             }
             s =
                 typeof crypto !== "undefined" && crypto.randomUUID
                     ? crypto.randomUUID()
                     : "pvm-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+            if (s.length > SESSION_MAX) {
+                s = s.slice(0, SESSION_MAX);
+            }
             localStorage.setItem(SESSION_KEY, s);
             return s;
         } catch (e) {
-            return "pvm-fallback-" + Date.now();
+            var fb = "pvm-fallback-" + Date.now();
+            return fb.length > SESSION_MAX ? fb.slice(0, SESSION_MAX) : fb;
         }
+    }
+
+    function rolDesdeJwt() {
+        try {
+            var tok = localStorage.getItem(JWT_KEY);
+            if (!tok) return "";
+            var parts = tok.split(".");
+            if (parts.length < 2) return "";
+            var b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            while (b64.length % 4) b64 += "=";
+            var j = JSON.parse(atob(b64));
+            return String(j.rol || "").toLowerCase();
+        } catch (e) {
+            return "";
+        }
+    }
+
+    function appContext() {
+        return String(window.PVM_APP_CONTEXT || "tienda_cliente").toLowerCase();
+    }
+
+    /** Carrito de abasto: panel admin explícito o sesión JWT con rol admin (p. ej. catálogo enlazado). */
+    function esModoAbasto() {
+        if (appContext() === "tienda_admin") {
+            return true;
+        }
+        return rolDesdeJwt() === "admin";
+    }
+
+    var MSJ_CODIGO_API = {
+        SESSION_REQUIRED:
+            "El servidor no recibió el identificador de sesión del carrito. Recarga la página o borra datos del sitio para este dominio y vuelve a intentar.",
+        SESSION_INVALID:
+            "El identificador de sesión guardado no es válido (debe tener entre 8 y 100 caracteres). Se ha generado uno nuevo; vuelve a intentar.",
+        EMPTY_CART: "El carrito está vacío. Agrega productos antes de finalizar.",
+        USE_ABASTO_ENDPOINT:
+            "Como administrador debes usar el apartado de abasto y el botón de entrada a inventario.",
+        FORBIDDEN: "No tienes permiso para esta acción. Inicia sesión con la cuenta adecuada.",
+        LOGIN_REQUIRED: "Inicia sesión como cliente para completar la compra.",
+        INVALID_PRODUCT: "Producto no válido. Revisa el id del artículo.",
+        INVALID_QUANTITY: "Cantidad no válida.",
+        MAX_LINEA: "Superaste el máximo de unidades permitidas por producto en el carrito.",
+        MAX_QUANTITY_EXCEEDED:
+            "La cantidad supera el máximo permitido por producto en el carrito.",
+        INSUFFICIENT_STOCK: "No hay suficiente stock disponible para esa cantidad.",
+        CHECKOUT_STOCK: "No se pudo completar la venta por falta de inventario.",
+        ABASTO_STOCK_CAP: "El abasto superaría el inventario máximo permitido. Reduce cantidades.",
+    };
+
+    function mensajeErrorApi(err) {
+        var c = err && err.code ? String(err.code) : "";
+        var base = err && err.message ? String(err.message) : "Error desconocido";
+        if (c && MSJ_CODIGO_API[c]) {
+            return MSJ_CODIGO_API[c] + " (" + c + ")";
+        }
+        if (c) {
+            return base + " [" + c + "]";
+        }
+        if (err && err.status) {
+            if (err.status === 400 && !c) {
+                return (
+                    base +
+                    " Si el problema continúa, recarga la página o revisa que el servidor esté en marcha. (HTTP 400)"
+                );
+            }
+            return base + " (HTTP " + err.status + ")";
+        }
+        return base;
     }
 
     function formatoPrecio(n) {
@@ -119,11 +204,141 @@
             .replace(/"/g, "&quot;");
     }
 
+    function ensureModalFocusSentinel() {
+        var sentinel = document.getElementById("pvm-modal-focus-sentinel");
+        if (sentinel) {
+            return sentinel;
+        }
+        sentinel = document.createElement("button");
+        sentinel.type = "button";
+        sentinel.id = "pvm-modal-focus-sentinel";
+        sentinel.tabIndex = -1;
+        sentinel.style.position = "fixed";
+        sentinel.style.width = "1px";
+        sentinel.style.height = "1px";
+        sentinel.style.padding = "0";
+        sentinel.style.border = "0";
+        sentinel.style.overflow = "hidden";
+        sentinel.style.clip = "rect(0 0 0 0)";
+        sentinel.style.whiteSpace = "nowrap";
+        sentinel.style.left = "-9999px";
+        sentinel.style.top = "0";
+        if (document.body) {
+            document.body.appendChild(sentinel);
+        }
+        return sentinel;
+    }
+
+    function tryFocus(el) {
+        if (!el || typeof el.focus !== "function") {
+            return false;
+        }
+        try {
+            el.focus({ preventScroll: true });
+            return true;
+        } catch (e1) {
+            try {
+                el.focus();
+                return true;
+            } catch (e2) {
+                return false;
+            }
+        }
+    }
+
+    function prepararFocoParaSwal() {
+        var canvas = document.getElementById("carritoCanvas");
+        var ae = document.activeElement;
+        var focoEnCanvas = Boolean(
+            canvas &&
+                ae &&
+                typeof canvas.contains === "function" &&
+                canvas.contains(ae)
+        );
+
+        if (focoEnCanvas) {
+            if (ae && typeof ae.blur === "function") {
+                try {
+                    ae.blur();
+                } catch (e0) {
+                    /* ignore */
+                }
+            }
+
+            var targetFuera =
+                document.querySelector(
+                    'button.carrito-flotante[data-bs-target="#carritoCanvas"]'
+                ) ||
+                document.querySelector(
+                    '[data-bs-toggle="offcanvas"][data-bs-target="#carritoCanvas"]'
+                ) ||
+                document.getElementById("btn-cerrar-admin") ||
+                ensureModalFocusSentinel() ||
+                document.body;
+
+            tryFocus(targetFuera);
+
+            if (canvas && !canvas.hasAttribute("inert")) {
+                canvas.setAttribute("inert", "");
+                canvas.setAttribute("data-pvm-swal-inert", "1");
+            }
+            return;
+        }
+
+        var app = document.getElementById("pvm-admin-app");
+        if (app && ae && typeof app.contains === "function" && app.contains(ae)) {
+            tryFocus(ensureModalFocusSentinel() || document.body);
+        }
+    }
+
+    function restaurarFocoTrasSwal() {
+        var canvas = document.getElementById("carritoCanvas");
+        if (!canvas) {
+            return;
+        }
+        if (canvas.getAttribute("data-pvm-swal-inert") === "1") {
+            canvas.removeAttribute("data-pvm-swal-inert");
+            canvas.removeAttribute("inert");
+        }
+    }
+
     function toastSwal(opts) {
         if (typeof Swal === "undefined") {
             return;
         }
-        Swal.fire(opts);
+        prepararFocoParaSwal();
+
+        var cfg = Object.assign({}, opts || {});
+        var prevWillOpen = cfg.willOpen;
+        var prevDidOpen = cfg.didOpen;
+        var prevDidClose = cfg.didClose;
+
+        cfg.returnFocus = false;
+        cfg.willOpen = function (popup) {
+            prepararFocoParaSwal();
+            if (typeof prevWillOpen === "function") {
+                prevWillOpen(popup);
+            }
+        };
+        cfg.didOpen = function (popup) {
+            if (typeof Swal.getConfirmButton === "function") {
+                var btn = Swal.getConfirmButton();
+                if (!tryFocus(btn) && popup) {
+                    tryFocus(popup);
+                }
+            }
+            if (typeof prevDidOpen === "function") {
+                prevDidOpen(popup);
+            }
+        };
+        cfg.didClose = function (popup) {
+            restaurarFocoTrasSwal();
+            if (typeof prevDidClose === "function") {
+                prevDidClose(popup);
+            }
+        };
+
+        return Swal.fire(cfg);
     }
 
     function mostrarAdvertencias(warnings) {
@@ -131,7 +346,7 @@
             return;
         }
         warnings.forEach(function (w) {
-            Swal.fire({
+            toastSwal({
                 icon: "warning",
                 title: "Aviso de inventario",
                 text: w,
@@ -142,15 +357,53 @@
         });
     }
 
-    var JWT_KEY = "pvm_jwt";
+    function emitirStockRefresh() {
+        try {
+            window.dispatchEvent(new CustomEvent("pvm:stock-refresh"));
+        } catch (e) {
+            /* ignore */
+        }
+    }
 
-    function request(path, options) {
+    function aplicarUiCarritoPorContexto() {
+        try {
+            var canvas = document.getElementById("carritoCanvas");
+            if (esModoAbasto()) {
+                document.body.classList.add("pvm-tienda-admin");
+                document.body.classList.remove("pvm-tienda-cliente");
+                if (!canvas) {
+                    return;
+                }
+                var h = canvas.querySelector(".offcanvas-header h4");
+                if (h) {
+                    h.innerHTML =
+                        '<i class="fa-solid fa-dolly"></i> Carrito de abasto';
+                }
+                var btnFin = canvas.querySelector(
+                    'button[onclick="finalizarCompra()"]'
+                );
+                if (btnFin) {
+                    btnFin.textContent = "Registrar entrada a inventario";
+                }
+            } else {
+                document.body.classList.add("pvm-tienda-cliente");
+                document.body.classList.remove("pvm-tienda-admin");
+            }
+        } catch (e) {
+            /* ignore */
+        }
+    }
+
+    function request(path, options, intentoRetry) {
         var url = apiRoot() + path;
-        var opts = options || {};
-        opts.headers = opts.headers || {};
+        var opts = options ? Object.assign({}, options) : {};
+        opts.headers = Object.assign({}, opts.headers || {});
         opts.headers["X-Session-Id"] = getSessionId();
-        opts.headers["Content-Type"] =
-            opts.headers["Content-Type"] || "application/json";
+        var metodo = String(opts.method || "GET").toUpperCase();
+        if (metodo !== "GET" && metodo !== "HEAD") {
+            opts.headers["Content-Type"] =
+                opts.headers["Content-Type"] || "application/json";
+        }
         try {
             var tok = localStorage.getItem(JWT_KEY);
             if (tok && tok.length > 10) {
@@ -174,6 +427,22 @@
                     var err = new Error(msg);
                     err.status = res.status;
                     err.body = body;
+                    err.code =
+                        body.error && body.error.code
+                            ? String(body.error.code)
+                            : undefined;
+                    var reintentar =
+                        !intentoRetry &&
+                        (err.code === "SESSION_INVALID" ||
+                            err.code === "SESSION_REQUIRED");
+                    if (reintentar) {
+                        try {
+                            localStorage.removeItem(SESSION_KEY);
+                        } catch (e3) {
+                            /* ignore */
+                        }
+                        return request(path, options, true);
+                    }
                     throw err;
                 }
                 return body;
@@ -205,14 +474,15 @@
     }
 
     window.actualizarCarrito = function () {
-        var lista = document.getElementById("lista-carrito");
-        var subtotalEl = document.getElementById("subtotal");
-        var ivaEl = document.getElementById("iva");
-        var totalEl = document.getElementById("total");
-        var contadores = document.querySelectorAll("[data-carrito-contador]");
+        void (async function () {
+            var lista = document.getElementById("lista-carrito");
+            var subtotalEl = document.getElementById("subtotal");
+            var ivaEl = document.getElementById("iva");
+            var totalEl = document.getElementById("total");
+            var contadores = document.querySelectorAll("[data-carrito-contador]");
 
-        request("/carrito", { method: "GET" })
-            .then(function (resp) {
+            try {
+                var resp = await request("/carrito", { method: "GET" });
                 var data = resp.data || {};
                 var lineas = data.lineas || [];
                 var subtotal = data.subtotal != null ? data.subtotal : 0;
@@ -247,7 +517,11 @@
 
                 if (lineas.length === 0) {
                     lista.innerHTML =
-                        '<p class="text-muted text-center py-4 mb-0">Tu carrito está vacío.</p>';
+                        '<p class="text-muted text-center py-4 mb-0">' +
+                        (esModoAbasto()
+                            ? "Tu carrito de abasto está vacío."
+                            : "Tu carrito está vacío.") +
+                        "</p>";
                     return;
                 }
 
@@ -268,6 +542,19 @@
                               '" class="cart-thumb-placeholder rounded-2 align-items-center justify-content-center d-none position-absolute top-0 start-0 w-100 h-100"><i class="fa-solid fa-couch" aria-hidden="true"></i></div></div>'
                             : '<div class="cart-thumb-placeholder flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center" style="width:72px;height:72px;min-width:72px"><i class="fa-solid fa-couch" aria-hidden="true"></i></div>';
                         var maxC = L.max_en_carrito != null ? L.max_en_carrito : 30;
+                        var metaLinea = esModoAbasto()
+                            ? "Stock actual: " +
+                              L.stock +
+                              " uds. · Con esta entrada: " +
+                              (L.stock + L.cantidad) +
+                              " uds. (respeta tope del servidor)"
+                            : "En inventario: " +
+                              L.stock +
+                              " · Libres (no reservadas): " +
+                              L.disponible_global;
+                        var maxLabel = esModoAbasto()
+                            ? "Máx. por línea (abasto): "
+                            : "Máx. en carrito: ";
                         return (
                             '<div class="card border-0 shadow-sm mb-3 cart-line" data-id-carrito="' +
                             idC +
@@ -284,10 +571,8 @@
                             ' <span class="text-muted small fw-normal">MXN</span> × ' +
                             L.cantidad +
                             "</p>" +
-                            '<p class="small text-muted mb-2">En inventario: ' +
-                            L.stock +
-                            " · Libres (no reservadas): " +
-                            L.disponible_global +
+                            '<p class="small text-muted mb-2">' +
+                            metaLinea +
                             "</p>" +
                             '<div class="d-flex flex-wrap align-items-center gap-2">' +
                             '<div class="btn-group" role="group" aria-label="Cantidad">' +
@@ -298,7 +583,8 @@
                             idC +
                             ",1)\" aria-label=\"Más\">+</button>" +
                             "</div>" +
-                            '<span class="small text-muted">Máx. en carrito: ' +
+                            '<span class="small text-muted">' +
+                            maxLabel +
                             maxC +
                             "</span>" +
                             '<button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="eliminarProducto(' +
@@ -309,21 +595,21 @@
                         );
                     })
                     .join("");
-            })
-            .catch(function (err) {
+            } catch (err) {
                 if (lista) {
                     lista.innerHTML =
-                        '<p class="text-danger small mb-0">No se pudo cargar el carrito. ¿Está el servidor en marcha? (' +
-                        escapeHtml(err.message) +
+                        '<p class="text-danger small mb-0">No se pudo cargar el carrito. (' +
+                        escapeHtml(mensajeErrorApi(err)) +
                         ")</p>";
                 }
                 toastSwal({
                     icon: "error",
                     title: "Error de conexión",
-                    text: err.message,
+                    text: mensajeErrorApi(err),
                     confirmButtonColor: "#c9a227",
                 });
-            });
+            }
+        })();
     };
 
     function esIdProducto(v) {
@@ -370,7 +656,9 @@
                 }
                 toastSwal({
                     icon: "success",
-                    title: "Producto agregado",
+                    title: esModoAbasto()
+                        ? "Línea de abasto agregada"
+                        : "Producto agregado",
                     timer: 1200,
                     showConfirmButton: false,
                 });
@@ -380,7 +668,7 @@
                 toastSwal({
                     icon: err.status === 409 ? "warning" : "error",
                     title: "No se pudo agregar",
-                    text: err.message,
+                    text: mensajeErrorApi(err),
                     confirmButtonColor: "#c9a227",
                 });
             });
@@ -481,38 +769,85 @@
     };
 
     window.finalizarCompra = function () {
-        request("/carrito/checkout", { method: "POST", body: "{}" })
-            .then(function (resp) {
-                var msg =
-                    (resp.data && resp.data.message) || "Compra registrada.";
+        void (async function () {
+            var path = esModoAbasto() ? "/carrito/abasto" : "/carrito/compra";
+            try {
+                var cartaRes = await request("/carrito", { method: "GET" });
+                var dCart = cartaRes && cartaRes.data ? cartaRes.data : {};
+                var items = Array.isArray(dCart.items)
+                    ? dCart.items
+                    : Array.isArray(dCart.lineas)
+                      ? dCart.lineas
+                      : [];
+                if (!items || items.length === 0) {
+                    toastSwal({
+                        icon: "info",
+                        title: "Carrito vacío",
+                        text: "Agrega productos al carrito antes de finalizar.",
+                        confirmButtonColor: "#c9a227",
+                    });
+                    return;
+                }
+                
+                var resp = await request(path, { method: "POST", body: "{}" });
+                var d = resp.data || {};
+                var msg = d.message || "Operación registrada.";
+                var titulo = "Listo";
+                var warnings = Array.isArray(d.warnings) ? d.warnings : [];
+                if (d.modo === "abasto_admin") {
+                    titulo = "Abasto registrado";
+                } else if (d.modo === "venta_cliente") {
+                    titulo = "Compra realizada";
+                } else if (esModoAbasto()) {
+                    titulo = "Abasto registrado";
+                } else {
+                    titulo = "Compra realizada";
+                }
                 toastSwal({
-                    icon: "success",
-                    title: "Compra realizada",
+                    icon: warnings.length ? "warning" : "success",
+                    title: titulo,
                     text: msg,
                     confirmButtonColor: "#c9a227",
                 });
+                if (warnings.length) {
+                    mostrarAdvertencias(warnings);
+                }
                 actualizarCarrito();
-            })
-            .catch(function (err) {
+                if (esModoAbasto()) {
+                    emitirStockRefresh();
+                }
+            } catch (err) {
+                var st = err.status;
+                var icon = st === 409 || st === 403 ? "warning" : "error";
+                var tituloErr = esModoAbasto()
+                    ? "No se pudo registrar el abasto"
+                    : "No se pudo finalizar la compra";
+                if (err.code === "USE_ABASTO_ENDPOINT") {
+                    tituloErr = "Flujo incorrecto";
+                    icon = "warning";
+                }
                 toastSwal({
-                    icon: "error",
-                    title: "No se pudo finalizar",
-                    text: err.message,
+                    icon: icon,
+                    title: tituloErr,
+                    text: mensajeErrorApi(err),
                     confirmButtonColor: "#c9a227",
                 });
-            });
+            }
+        })();
     };
 
     /**
      * Bootstrap aplica aria-hidden al cerrar el offcanvas; el foco debe estar fuera antes.
-     * Un listener solo en el panel puede correr en el mismo orden que el interno de Bootstrap;
-     * por eso se usa captura en document y se devuelve el foco al disparador del carrito.
+     * Esto previene el error de accesibilidad: "blocked aria-hidden on an element because its
+     * descendant retained focus". Movemos el foco al botón de cierre o al disparador antes de
+     * que Bootstrap aplique aria-hidden.
      */
     function moverFocoAntesCerrarCarrito() {
         var canvas = document.getElementById("carritoCanvas");
         if (!canvas) {
             return;
         }
+
         var ae = document.activeElement;
         if (
             !ae ||
@@ -522,31 +857,39 @@
             return;
         }
 
-        var toggle =
+        var prioridad = [
             document.querySelector(
                 'button.carrito-flotante[data-bs-target="#carritoCanvas"]'
-            ) ||
+            ),
             document.querySelector(
                 '[data-bs-toggle="offcanvas"][data-bs-target="#carritoCanvas"]'
-            );
+            ),
+            document.querySelector("[data-bs-toggle='collapse']"),
+            document.body
+        ];
 
-        if (
-            toggle &&
-            !canvas.contains(toggle) &&
-            typeof toggle.focus === "function"
-        ) {
-            try {
-                toggle.focus({ preventScroll: true });
-            } catch (e1) {
+        for (var i = 0; i < prioridad.length; i++) {
+            var target = prioridad[i];
+            if (
+                target &&
+                !canvas.contains(target) &&
+                typeof target.focus === "function"
+            ) {
                 try {
-                    toggle.focus();
-                } catch (e2) {
-                    /* ignore */
+                    target.focus({ preventScroll: true });
+                    return;
+                } catch (e1) {
+                    try {
+                        target.focus();
+                        return;
+                    } catch (e2) {
+                        /* ignore */
+                    }
                 }
             }
         }
 
-        ae = document.activeElement;
+        var ae = document.activeElement;
         if (
             ae &&
             canvas.contains(ae) &&
@@ -557,23 +900,116 @@
     }
 
     var pvmCarritoHideFocusInstalled = false;
+    var pvmCarritoLastFocus = null;
+
+    function getSafeFocusTarget(canvas) {
+        if (pvmCarritoLastFocus && typeof pvmCarritoLastFocus.focus === "function") {
+            if (!canvas || (typeof canvas.contains === "function" && !canvas.contains(pvmCarritoLastFocus))) {
+                return pvmCarritoLastFocus;
+            }
+        }
+
+        return (
+            document.querySelector(
+                'button.carrito-flotante[data-bs-target="#carritoCanvas"]'
+            ) ||
+            document.querySelector(
+                '[data-bs-toggle="offcanvas"][data-bs-target="#carritoCanvas"]'
+            ) ||
+            document.getElementById("btn-cerrar-admin") ||
+            document.body
+        );
+    }
+
+    function focusOutsideCanvas(canvas) {
+        var target = getSafeFocusTarget(canvas);
+        if (target && typeof target.focus === "function") {
+            try {
+                target.focus({ preventScroll: true });
+                return;
+            } catch (e1) {
+                try {
+                    target.focus();
+                    return;
+                } catch (e2) {
+                    /* ignore */
+                }
+            }
+        }
+        if (typeof document.body.focus === "function") {
+            try {
+                document.body.setAttribute("tabindex", "-1");
+                document.body.focus({ preventScroll: true });
+            } catch (e3) {
+                /* ignore */
+            }
+        }
+    }
 
     function instalarFocoAlOcultarCarrito() {
         if (pvmCarritoHideFocusInstalled) {
             return;
         }
         pvmCarritoHideFocusInstalled = true;
-        document.addEventListener(
-            "hide.bs.offcanvas",
-            function (ev) {
-                var t = ev.target;
-                if (!t || t.id !== "carritoCanvas") {
-                    return;
+        var canvas = document.getElementById("carritoCanvas");
+        if (!canvas) {
+            return;
+        }
+
+        var manejarShow = function (ev) {
+            var t = ev.target;
+            if (!t || t.id !== "carritoCanvas") {
+                return;
+            }
+            if (canvas && typeof canvas.removeAttribute === "function") {
+                try {
+                    canvas.removeAttribute("inert");
+                } catch (e) {
+                    /* ignore */
                 }
-                moverFocoAntesCerrarCarrito();
-            },
-            true
-        );
+            }
+        };
+
+        var manejarShown = function (ev) {
+            var t = ev.target;
+            if (!t || t.id !== "carritoCanvas") {
+                return;
+            }
+            var ae = document.activeElement;
+            if (ae && ae !== document.body && (!canvas.contains || !canvas.contains(ae))) {
+                pvmCarritoLastFocus = ae;
+            }
+        };
+
+        var manejarHide = function (ev) {
+            var t = ev.target;
+            if (!t || t.id !== "carritoCanvas") {
+                return;
+            }
+            // Move focus out before Bootstrap toggles aria-hidden.
+            moverFocoAntesCerrarCarrito();
+            focusOutsideCanvas(canvas);
+            if (canvas && typeof canvas.setAttribute === "function") {
+                try {
+                    canvas.setAttribute("inert", "");
+                } catch (e) {
+                    /* ignore */
+                }
+            }
+        };
+
+        var manejarHidden = function (ev) {
+            var t = ev.target;
+            if (!t || t.id !== "carritoCanvas") {
+                return;
+            }
+            focusOutsideCanvas(canvas);
+        };
+
+        document.addEventListener("show.bs.offcanvas", manejarShow, true);
+        document.addEventListener("shown.bs.offcanvas", manejarShown, true);
+        document.addEventListener("hide.bs.offcanvas", manejarHide, true);
+        document.addEventListener("hidden.bs.offcanvas", manejarHidden, true);
     }
 
     window.pvmVolverAtras = function () {
@@ -618,6 +1054,7 @@
     function initCartUi() {
         injectCartBackButton();
         instalarFocoAlOcultarCarrito();
+        aplicarUiCarritoPorContexto();
         actualizarCarrito();
     }
 
