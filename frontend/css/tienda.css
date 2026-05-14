@@ -1,0 +1,276 @@
+/**
+ * Punto Venta Muebles — estilos globales e-commerce (Bootstrap 5)
+ * Incluir después de Bootstrap y antes o después del CSS de categoría.
+ */
+
+:root {
+    --pvm-dorado: #c9a227;
+    --pvm-dorado-oscuro: #a8861b;
+    --pvm-stock: #198754;
+    --pvm-stock-bg: rgba(25, 135, 84, 0.1);
+    --pvm-carrusel-flecha: rgba(201, 162, 39, 0.95);
+    --pvm-sombra-card: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* ——— Stock (cards y modales) ——— */
+p.stock {
+    color: var(--pvm-stock);
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 0.5rem;
+    background: var(--pvm-stock-bg);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+p.stock i {
+    font-size: 1rem;
+}
+
+/* ——— Precio dorado ——— */
+.precio,
+h3.precio {
+    color: var(--pvm-dorado) !important;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+/* ——— Tarjetas producto ——— */
+.producto-card {
+    background: #fff;
+    border-radius: 1.15rem;
+    overflow: hidden;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.producto-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--pvm-sombra-card) !important;
+}
+
+.producto-card .carousel {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.producto-card .carousel-item img,
+.producto-card .carousel-inner img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+}
+
+@media (max-width: 576px) {
+    .producto-card .carousel-item img,
+    .producto-card .carousel-inner img {
+        height: 260px;
+    }
+}
+
+/* Carrusel: transición suave */
+.producto-card .carousel .carousel-item {
+    transition: transform 0.6s ease-in-out;
+}
+
+/* Flechas visibles y personalizadas */
+.producto-card .carousel-control-prev,
+.producto-card .carousel-control-next {
+    width: 3rem;
+    height: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    bottom: auto;
+    opacity: 1;
+}
+
+.producto-card .carousel-control-prev {
+    left: 0.5rem;
+}
+
+.producto-card .carousel-control-next {
+    right: 0.5rem;
+}
+
+.producto-card .carousel-control-prev-icon,
+.producto-card .carousel-control-next-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background-color: var(--pvm-carrusel-flecha);
+    background-size: 50% 50%;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.producto-card .carousel-indicators [data-bs-target] {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--pvm-dorado);
+}
+
+/* ——— Botones catálogo ——— */
+.btn-carrito,
+.btn.btn-carrito {
+    background: linear-gradient(180deg, #ffd54f 0%, #ffc107 100%);
+    border: none;
+    font-weight: 700;
+    color: #1a1a1a;
+    border-radius: 0.65rem;
+    padding: 0.65rem 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-carrito:hover,
+.btn.btn-carrito:hover {
+    background: linear-gradient(180deg, #ffe082 0%, #e0a800 100%);
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.45);
+}
+
+.btn-detalles,
+.btn.btn-detalles {
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    border-radius: 0.65rem;
+    padding: 0.65rem 1rem;
+    transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.btn-detalles:hover,
+.btn.btn-detalles:hover {
+    background: #333;
+    color: #fff;
+}
+
+.btn-dark.rounded-pill-custom,
+.producto-card .btn-dark {
+    border-radius: 2rem;
+}
+
+/* ——— Carrito flotante ——— */
+.carrito-flotante {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 1040;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(145deg, #ffc107, #e0a800);
+    color: #1a1a1a;
+    font-size: 1.35rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.carrito-flotante:hover {
+    transform: scale(1.06);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3);
+    color: #000;
+}
+
+.carrito-flotante .badge-carrito,
+.badge-carrito {
+    position: absolute;
+    top: -0.15rem;
+    right: -0.15rem;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.35rem;
+    border-radius: 50%;
+    background: #dc3545 !important;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+/* Compatibilidad con botón flotante antiguo */
+.carrito-btn.carrito-flotante,
+button.carrito-btn {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 50%;
+    z-index: 1040;
+}
+
+/* ——— Líneas del carrito (offcanvas) ——— */
+.cart-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+}
+
+.cart-thumb-placeholder {
+    width: 72px;
+    height: 72px;
+    background: #eee;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 1.5rem;
+}
+
+.cart-line .precio {
+    font-size: 1rem;
+}
+
+/* ——— Modales detalle ——— */
+.modal-detalle-img {
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+}
+
+.detalle-img {
+    width: 100%;
+    border-radius: 0.75rem;
+    max-height: 420px;
+    object-fit: cover;
+}
+
+.modal-content {
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+/* ——— Navbar tienda ——— */
+.navbar-pvm {
+    background: rgba(17, 17, 17, 0.95) !important;
+    backdrop-filter: blur(10px);
+    padding: 0.85rem 0;
+}
+
+.navbar-pvm .nav-link {
+    transition: color 0.2s ease;
+}
+
+.navbar-pvm .nav-link:hover {
+    color: #ffc107 !important;
+}

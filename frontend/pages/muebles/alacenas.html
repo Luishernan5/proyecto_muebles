@@ -23,164 +23,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
+    <!-- CSS PERSONALIZADO -->
 
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-        }
+    <link rel="stylesheet" href="../../css/muebles/alacenas.css">
 
-        body{
-            background:#f5f5f5;
-            font-family:Arial, Helvetica, sans-serif;
-        }
-
-        .navbar{
-            background:#111;
-        }
-
-        .hero{
-
-            background:
-            linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)),
-            url('../../img/banner/muebles.png');
-
-            background-size:cover;
-            background-position:center;
-
-            padding:120px 0;
-
-            color:white;
-            text-align:center;
-        }
-
-        .hero h1{
-            font-size:4rem;
-            font-weight:bold;
-        }
-
-        .hero p{
-            font-size:1.2rem;
-        }
-
-        .producto-card{
-
-            background:white;
-
-            border-radius:20px;
-
-            overflow:hidden;
-
-            transition:.3s;
-
-            height:100%;
-        }
-
-        .producto-card:hover{
-
-            transform:translateY(-10px);
-
-            box-shadow:0 20px 40px rgba(0,0,0,.2);
-        }
-
-        .carousel-item img{
-
-            height:320px;
-
-            object-fit:cover;
-        }
-
-        .precio{
-
-            color:#c59d00;
-
-            font-size:1.6rem;
-
-            font-weight:bold;
-        }
-
-        .btn-carrito{
-
-            background:#ffc107;
-
-            border:none;
-
-            font-weight:bold;
-        }
-
-        .btn-carrito:hover{
-
-            background:#e0aa00;
-        }
-
-        .carousel-control-prev-icon,
-        .carousel-control-next-icon{
-
-            background-color:rgba(0,0,0,.8);
-
-            border-radius:50%;
-
-            padding:18px;
-        }
-
-        .carrito-btn{
-
-            position:fixed;
-
-            right:20px;
-
-            bottom:20px;
-
-            width:70px;
-
-            height:70px;
-
-            border-radius:50%;
-
-            z-index:999;
-
-            font-size:1.3rem;
-        }
-
-        .badge-carrito{
-
-            position:absolute;
-
-            top:-5px;
-
-            right:-5px;
-
-            background:red;
-
-            color:white;
-
-            border-radius:50%;
-
-            width:25px;
-
-            height:25px;
-
-            display:flex;
-
-            align-items:center;
-
-            justify-content:center;
-
-            font-size:.8rem;
-        }
-
-        .modal img{
-
-            height:400px;
-
-            object-fit:cover;
-
-            width:100%;
-        }
-
-    </style>
-
+    <link rel="stylesheet" href="../../css/tienda.css">
 </head>
 
 <body>
@@ -305,6 +152,11 @@
 
                     </p>
 
+                    <p class="stock">
+                        <i class="fa-solid fa-check"></i>
+                        Disponible en stock
+                    </p>
+
                     <h3 class="precio">
 
                         $8,999 MXN
@@ -314,7 +166,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Alacena Moderna Premium',8999)">
+                            onclick="agregarCarrito('Alacena Moderna Premium',8999,'../../img/muebles/alacenas/1.jpg')">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -405,6 +257,11 @@
 
                     </p>
 
+                    <p class="stock">
+                        <i class="fa-solid fa-check"></i>
+                        Disponible en stock
+                    </p>
+
                     <h3 class="precio">
 
                         $10,499 MXN
@@ -414,7 +271,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Alacena Luxury',10499)">
+                            onclick="agregarCarrito('Alacena Luxury',10499,'../../img/muebles/alacenas/2.jpg')">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -505,6 +362,11 @@
 
                     </p>
 
+                    <p class="stock">
+                        <i class="fa-solid fa-check"></i>
+                        Disponible en stock
+                    </p>
+
                     <h3 class="precio">
 
                         $7,999 MXN
@@ -514,7 +376,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Alacena Classic',7999)">
+                            onclick="agregarCarrito('Alacena Classic',7999,'../../img/muebles/alacenas/3.jpg')">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -605,6 +467,11 @@
 
                     </p>
 
+                    <p class="stock">
+                        <i class="fa-solid fa-check"></i>
+                        Disponible en stock
+                    </p>
+
                     <h3 class="precio">
 
                         $11,999 MXN
@@ -614,7 +481,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Alacena Deluxe',11999)">
+                            onclick="agregarCarrito('Alacena Deluxe',11999,'../../img/muebles/alacenas/4.jpg')">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -705,6 +572,11 @@
 
                     </p>
 
+                    <p class="stock">
+                        <i class="fa-solid fa-check"></i>
+                        Disponible en stock
+                    </p>
+
                     <h3 class="precio">
 
                         $14,999 MXN
@@ -714,7 +586,7 @@
                     <div class="d-grid gap-2 mt-4">
 
                         <button class="btn btn-carrito"
-                            onclick="agregarCarrito('Alacena Infinity',14999)">
+                            onclick="agregarCarrito('Alacena Infinity',14999,'../../img/muebles/alacenas/5.jpg')">
 
                             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -792,6 +664,8 @@
                             <li>Color nogal</li>
                             <li>Garantía 1 año</li>
                         </ul>
+                        <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Alacena Moderna Premium',8999,'../../img/muebles/alacenas/1.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
                     </div>
 
@@ -847,6 +721,8 @@
                             <li>Diseño moderno</li>
                             <li>Garantía 2 años</li>
                         </ul>
+                        <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Alacena Luxury',10499,'../../img/muebles/alacenas/2.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
                     </div>
 
@@ -902,6 +778,8 @@
                             <li>5 compartimientos</li>
                             <li>Garantía 1 año</li>
                         </ul>
+                        <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Alacena Classic',7999,'../../img/muebles/alacenas/3.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
                     </div>
 
@@ -957,6 +835,8 @@
                             <li>Diseño elegante</li>
                             <li>Garantía 2 años</li>
                         </ul>
+                        <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Alacena Deluxe',11999,'../../img/muebles/alacenas/4.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
                     </div>
 
@@ -1012,6 +892,8 @@
                             <li>7 compartimientos</li>
                             <li>Garantía 2 años</li>
                         </ul>
+                        <p class="stock mt-2"><i class="fa-solid fa-check"></i> Disponible en stock</p>
+                        <button type="button" class="btn btn-carrito w-100 mt-3" onclick="agregarCarrito('Alacena Infinity',14999,'../../img/muebles/alacenas/5.jpg')"><i class="fa-solid fa-cart-shopping me-2"></i>Agregar al carrito</button>
 
                     </div>
 
@@ -1029,64 +911,34 @@
 
 <!-- ================= CARRITO ================= -->
 
-<button class="btn btn-warning carrito-btn shadow"
-    data-bs-toggle="offcanvas"
-    data-bs-target="#carrito">
-
+<button type="button" class="btn btn-warning carrito-btn carrito-flotante shadow" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas" aria-label="Abrir carrito">
     <i class="fa-solid fa-cart-shopping"></i>
-
-    <span class="badge-carrito"
-        id="contador">
-
-        0
-
-    </span>
-
+    <span class="badge-carrito" data-carrito-contador>0</span>
 </button>
 
-
-
-<div class="offcanvas offcanvas-end"
-    tabindex="-1"
-    id="carrito">
-
-    <div class="offcanvas-header">
-
-        <h4 class="fw-bold">
-
-            Carrito de compras
-
-        </h4>
-
-        <button type="button"
-            class="btn-close"
-            data-bs-dismiss="offcanvas">
-
-        </button>
-
+<div class="offcanvas offcanvas-end" tabindex="-1" id="carritoCanvas" aria-labelledby="carritoCanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h4 class="fw-bold mb-0" id="carritoCanvasLabel"><i class="fa-solid fa-cart-shopping me-2"></i>Carrito de compras</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
     </div>
-
-    <div class="offcanvas-body">
-
-        <div id="lista-carrito">
-
+    <div class="offcanvas-body d-flex flex-column">
+        <div id="lista-carrito" class="flex-grow-1"></div>
+        <hr class="my-3">
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>Subtotal</span>
+            <span>$<span id="subtotal">0.00</span> MXN</span>
         </div>
-
-        <hr>
-
-        <h5>
-
-            Total:
-            <span id="total">
-
-                $0 MXN
-
-            </span>
-
-        </h5>
-
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>IVA (16%)</span>
+            <span>$<span id="iva">0.00</span> MXN</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+            <span>Total</span>
+            <span>$<span id="total">0.00</span> MXN</span>
+        </div>
+        <button type="button" class="btn btn-success w-100 mb-2" onclick="finalizarCompra()"><i class="fa-solid fa-credit-card me-2"></i>Finalizar compra</button>
+        <button type="button" class="btn btn-outline-danger w-100" onclick="vaciarCarrito()">Vaciar carrito</button>
     </div>
-
 </div>
 
 
@@ -1099,86 +951,7 @@
 
 <!-- ================= JS ================= -->
 
-<script>
-
-    let carrito = [];
-
-    function agregarCarrito(nombre, precio){
-
-        carrito.push({
-            nombre,
-            precio
-        });
-
-        actualizarCarrito();
-
-        Swal.fire({
-
-            icon:'success',
-
-            title:'Producto agregado',
-
-            text: nombre + ' agregado al carrito',
-
-            confirmButtonColor:'#ffc107'
-
-        });
-
-    }
-
-    function actualizarCarrito(){
-
-        let lista =
-        document.getElementById('lista-carrito');
-
-        let total =
-        document.getElementById('total');
-
-        let contador =
-        document.getElementById('contador');
-
-        lista.innerHTML = "";
-
-        let suma = 0;
-
-        carrito.forEach(producto=>{
-
-            suma += producto.precio;
-
-            lista.innerHTML += `
-
-            <div class="border rounded p-3 mb-3">
-
-                <h6 class="fw-bold">
-
-                    ${producto.nombre}
-
-                </h6>
-
-                <p>
-
-                    $${producto.precio} MXN
-
-                </p>
-
-            </div>
-
-            `;
-
-        });
-
-        total.innerHTML =
-        `$${suma} MXN`;
-
-        contador.innerHTML =
-        carrito.length;
-
-    }
-
-</script>
-
-</script>
-
+    <script src="../../js/carrito.js"></script>
 </body>
 
 </html>

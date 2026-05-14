@@ -21,6 +21,7 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/tienda.css">
 
 </head>
 
@@ -101,7 +102,8 @@
                             <i class="fa-solid fa-cart-shopping"></i>
 
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                id="contador">
+                                id="contador"
+                                data-carrito-contador>
 
                                 0
 
@@ -134,7 +136,7 @@
 
             <p class="lead mt-4">
 
-                Camas y muebles elegantes para transformar tu espacio.
+                Camas, muebles y comedor para transformar tu espacio.
 
             </p>
 
@@ -166,11 +168,11 @@
 
         </div>
 
-        <div class="row g-4">
+        <div class="row g-4 justify-content-center">
 
             <!-- CAMAS -->
 
-            <div class="col-md-6">
+            <div class="col-lg-4 col-md-6">
 
                 <div class="card categoria-card border-0 shadow">
 
@@ -202,7 +204,7 @@
 
             <!-- MUEBLES -->
 
-            <div class="col-md-6">
+            <div class="col-lg-4 col-md-6">
 
                 <div class="card categoria-card border-0 shadow">
 
@@ -223,6 +225,39 @@
                             class="btn btn-dark">
 
                             Ver muebles
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- COMEDOR -->
+
+            <div class="col-lg-4 col-md-6">
+
+                <div class="card categoria-card border-0 shadow">
+
+                    <img src="img/banner/comedor.png"
+                        class="card-img-top"
+                        alt="Comedor">
+
+                    <div class="card-body text-center">
+
+                        <h3 class="fw-bold">
+                            Comedor
+                        </h3>
+
+                        <p>
+                            Mesas, sillas y conjuntos para tu sala-comedor.
+                        </p>
+
+                        <a href="pages/comedor/comedor.html"
+                            class="btn btn-dark">
+
+                            Ver comedor
 
                         </a>
 
@@ -361,6 +396,11 @@
 
     </footer>
 
+    <button type="button" class="btn btn-warning carrito-btn carrito-flotante shadow" data-bs-toggle="offcanvas"
+        data-bs-target="#carritoCanvas" aria-label="Abrir carrito">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="badge-carrito" data-carrito-contador>0</span>
+    </button>
 
     <!-- ================= CARRITO ================= -->
 

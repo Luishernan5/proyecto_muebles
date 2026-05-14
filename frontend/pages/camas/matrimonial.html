@@ -1,295 +1,28 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-    <title>Camas Matrimoniales | Punto Venta Muebles</title>
-
-    <!-- BOOTSTRAP -->
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-
-    <!-- FONT AWESOME -->
-
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-    <!-- SWEET ALERT -->
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <style>
-
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-        }
-
-        body{
-            background:#f4f4f4;
-            font-family:Arial, Helvetica, sans-serif;
-        }
-
-        .navbar{
-            background:#111;
-            padding:15px 0;
-        }
-
-        .hero{
-
-            background:
-            linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.65)),
-            url('../../img/banner/camas.png');
-
-            background-size:cover;
-            background-position:center;
-
-            padding:120px 0;
-
-            text-align:center;
-
-            color:white;
-        }
-
-        .hero h1{
-
-            font-size:4rem;
-
-            font-weight:bold;
-        }
-
-        .hero p{
-
-            font-size:1.2rem;
-        }
-
-        .producto-card{
-
-            background:white;
-
-            border-radius:25px;
-
-            overflow:hidden;
-
-            transition:.3s;
-
-            height:100%;
-        }
-
-        .producto-card:hover{
-
-            transform:translateY(-10px);
-
-            box-shadow:0 20px 40px rgba(0,0,0,.2);
-        }
-
-        .carousel-item img{
-
-            width:100%;
-
-            height:340px;
-
-            object-fit:cover;
-        }
-
-        .carousel-control-prev-icon,
-        .carousel-control-next-icon{
-
-            background-color:rgba(0,0,0,.85);
-
-            border-radius:50%;
-
-            padding:18px;
-        }
-
-        .precio{
-
-            color:#c59d00;
-
-            font-size:1.6rem;
-
-            font-weight:bold;
-        }
-
-        .stock{
-
-            color:green;
-
-            font-weight:bold;
-        }
-
-        .btn-carrito{
-
-            background:#ffc107;
-
-            border:none;
-
-            font-weight:bold;
-
-            padding:12px;
-
-            border-radius:10px;
-        }
-
-        .btn-carrito:hover{
-
-            background:#e0aa00;
-        }
-
-        .btn-detalles{
-
-            background:#111;
-
-            color:white;
-
-            border:none;
-
-            padding:12px;
-
-            border-radius:10px;
-
-            font-weight:bold;
-        }
-
-        .btn-detalles:hover{
-
-            background:#333;
-        }
-
-        .carrito-btn{
-
-            position:fixed;
-
-            right:20px;
-
-            bottom:20px;
-
-            width:70px;
-
-            height:70px;
-
-            border-radius:50%;
-
-            z-index:999;
-
-            font-size:1.5rem;
-        }
-
-        .badge-carrito{
-
-            position:absolute;
-
-            top:-5px;
-
-            right:-5px;
-
-            background:red;
-
-            color:white;
-
-            width:25px;
-
-            height:25px;
-
-            border-radius:50%;
-
-            display:flex;
-
-            align-items:center;
-
-            justify-content:center;
-
-            font-size:.8rem;
-        }
-
-        .detalle-img{
-
-            width:100%;
-
-            border-radius:15px;
-        }
-
-        footer{
-
-            background:#111;
-
-            color:white;
-
-            text-align:center;
-
-            padding:35px 0;
-
-            margin-top:70px;
-        }
-
-        @media(max-width:768px){
-
-            .hero h1{
-
-                font-size:2.7rem;
-            }
-
-        }
-
-    </style>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camas Matrimoniales | Punto Venta Muebles</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="../../css/camas/matrimonial.css">
+    <link rel="stylesheet" href="../../css/tienda.css">
 </head>
-
 <body>
-
-
-
-<!-- NAVBAR -->
-
 <nav class="navbar navbar-dark">
-
-    <div class="container">
-
-        <a href="camas.html"
-            class="navbar-brand fw-bold">
-
-            <i class="fa-solid fa-bed"></i>
-
-            Punto Venta Muebles
-
-        </a>
-
-    </div>
-
+<div class="container">
+<a href="camas.html" class="navbar-brand fw-bold"><i class="fa-solid fa-bed"></i> Punto Venta Muebles</a>
+</div>
 </nav>
 
-
-
-<!-- HERO -->
-
 <section class="hero">
-
-    <div class="container">
-
-        <h1>
-
-            Camas Matrimoniales
-
-        </h1>
-
-        <p class="mt-3">
-
-            Diseños modernos y máxima comodidad
-
-        </p>
-
-    </div>
-
+<div class="container">
+<h1>Camas Matrimoniales</h1>
+<p class="mt-3">Comodidad premium para parejas exigentes</p>
+</div>
 </section>
-
-
 
 <!-- PRODUCTOS -->
 
@@ -317,8 +50,11 @@ class="carousel slide">
 <div class="carousel-item">
 <img src="../../img/camas/matrimonial/Armason1.jpg">
 </div>
+                        <div class="carousel-item">
+                            <img src="../../img/camas/matrimonial/Cama1.jpg">
+                        </div>
 
-</div>
+                    </div>
 
 <button class="carousel-control-prev"
 type="button"
@@ -362,7 +98,7 @@ $7,999 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Nova',7999)">
+onclick="agregarCarrito('Cama Matrimonial Nova',7999,'../../img/camas/matrimonial/Cama1.jpg')">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -406,8 +142,11 @@ class="carousel slide">
 <div class="carousel-item">
 <img src="../../img/camas/matrimonial/Armason2.jpg">
 </div>
+                        <div class="carousel-item">
+                            <img src="../../img/camas/matrimonial/Cama2.jpg">
+                        </div>
 
-</div>
+                    </div>
 
 <button class="carousel-control-prev"
 type="button"
@@ -451,7 +190,7 @@ $8,699 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Luxury',8699)">
+onclick="agregarCarrito('Cama Matrimonial Luxury',8699,'../../img/camas/matrimonial/Cama2.jpg')">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -544,7 +283,7 @@ $9,299 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Premium',9299)">
+onclick="agregarCarrito('Cama Matrimonial Premium',9299,'../../img/camas/matrimonial/Cama3.jpg')">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -588,8 +327,11 @@ class="carousel slide">
 <div class="carousel-item">
 <img src="../../img/camas/matrimonial/Armason4.jpg">
 </div>
+                        <div class="carousel-item">
+                            <img src="../../img/camas/matrimonial/Cama4.jpg">
+                        </div>
 
-</div>
+                    </div>
 
 <button class="carousel-control-prev"
 type="button"
@@ -633,7 +375,7 @@ $9,999 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Deluxe',9999)">
+onclick="agregarCarrito('Cama Matrimonial Deluxe',9999,'../../img/camas/matrimonial/Cama4.jpg')">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -677,8 +419,11 @@ class="carousel slide">
 <div class="carousel-item">
 <img src="../../img/camas/matrimonial/Armason5.jpg">
 </div>
+                        <div class="carousel-item">
+                            <img src="../../img/camas/matrimonial/Cama5.jpg">
+                        </div>
 
-</div>
+                    </div>
 
 <button class="carousel-control-prev"
 type="button"
@@ -722,7 +467,7 @@ $10,999 MXN
 <div class="d-grid gap-2 mt-4">
 
 <button class="btn-carrito"
-onclick="agregarCarrito('Cama Matrimonial Infinity',10999)">
+onclick="agregarCarrito('Cama Matrimonial Infinity',10999,'../../img/camas/matrimonial/Cama5.jpg')">
 
 <i class="fa-solid fa-cart-shopping"></i>
 
@@ -814,7 +559,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Nova',7999)">
+onclick="agregarCarrito('Cama Matrimonial Nova',7999,'../../img/camas/matrimonial/Cama1.jpg')">
 
 Agregar al carrito
 
@@ -891,7 +636,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Luxury',8699)">
+onclick="agregarCarrito('Cama Matrimonial Luxury',8699,'../../img/camas/matrimonial/Cama2.jpg')">
 
 Agregar al carrito
 
@@ -968,7 +713,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Premium',9299)">
+onclick="agregarCarrito('Cama Matrimonial Premium',9299,'../../img/camas/matrimonial/Cama3.jpg')">
 
 Agregar al carrito
 
@@ -1045,7 +790,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Deluxe',9999)">
+onclick="agregarCarrito('Cama Matrimonial Deluxe',9999,'../../img/camas/matrimonial/Cama4.jpg')">
 
 Agregar al carrito
 
@@ -1122,7 +867,7 @@ Características
 </ul>
 
 <button class="btn btn-warning w-100"
-onclick="agregarCarrito('Cama Matrimonial Infinity',10999)">
+onclick="agregarCarrito('Cama Matrimonial Infinity',10999,'../../img/camas/matrimonial/Cama5.jpg')">
 
 Agregar al carrito
 
@@ -1143,69 +888,34 @@ Agregar al carrito
 
 <!-- CARRITO -->
 
-<button class="btn btn-warning carrito-btn shadow"
-data-bs-toggle="offcanvas"
-data-bs-target="#carrito">
-
-<i class="fa-solid fa-cart-shopping"></i>
-
-<span class="badge-carrito"
-id="contador">
-
-0
-
-</span>
-
+<button type="button" class="btn btn-warning carrito-btn carrito-flotante shadow" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas" aria-label="Abrir carrito">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span class="badge-carrito" data-carrito-contador>0</span>
 </button>
 
-
-
-<div class="offcanvas offcanvas-end"
-tabindex="-1"
-id="carrito">
-
-<div class="offcanvas-header">
-
-<h4 class="fw-bold">
-
-Carrito de compras
-
-</h4>
-
-<button class="btn-close"
-data-bs-dismiss="offcanvas">
-
-</button>
-
-</div>
-
-<div class="offcanvas-body">
-
-<div id="lista-carrito"></div>
-
-<hr>
-
-<h5>
-
-Total:
-<span id="total">
-
-$0 MXN
-
-</span>
-
-</h5>
-
-<button class="btn btn-success w-100 mt-4">
-
-<i class="fa-solid fa-credit-card"></i>
-
-Finalizar compra
-
-</button>
-
-</div>
-
+<div class="offcanvas offcanvas-end" tabindex="-1" id="carritoCanvas" aria-labelledby="carritoCanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h4 class="fw-bold mb-0" id="carritoCanvasLabel"><i class="fa-solid fa-cart-shopping me-2"></i>Carrito de compras</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+        <div id="lista-carrito" class="flex-grow-1"></div>
+        <hr class="my-3">
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>Subtotal</span>
+            <span>$<span id="subtotal">0.00</span> MXN</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>IVA (16%)</span>
+            <span>$<span id="iva">0.00</span> MXN</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+            <span>Total</span>
+            <span>$<span id="total">0.00</span> MXN</span>
+        </div>
+        <button type="button" class="btn btn-success w-100 mb-2" onclick="finalizarCompra()"><i class="fa-solid fa-credit-card me-2"></i>Finalizar compra</button>
+        <button type="button" class="btn btn-outline-danger w-100" onclick="vaciarCarrito()">Vaciar carrito</button>
+    </div>
 </div>
 
 
@@ -1236,99 +946,7 @@ Tienda premium de camas modernas
 
 
 
-<script>
-
-let carrito = [];
-
-function agregarCarrito(nombre, precio){
-
-carrito.push({
-nombre,
-precio
-});
-
-actualizarCarrito();
-
-Swal.fire({
-
-icon:'success',
-
-title:'Producto agregado',
-
-text: nombre + ' agregado al carrito',
-
-confirmButtonColor:'#ffc107'
-
-});
-
-}
-
-function actualizarCarrito(){
-
-let lista =
-document.getElementById('lista-carrito');
-
-let total =
-document.getElementById('total');
-
-let contador =
-document.getElementById('contador');
-
-lista.innerHTML = "";
-
-let suma = 0;
-
-carrito.forEach((producto,index)=>{
-
-suma += producto.precio;
-
-lista.innerHTML += `
-
-<div class="border rounded p-3 mb-3">
-
-<h6 class="fw-bold">
-
-${producto.nombre}
-
-</h6>
-
-<p>
-
-$${producto.precio} MXN
-
-</p>
-
-<button class="btn btn-danger btn-sm"
-onclick="eliminarProducto(${index})">
-
-Eliminar
-
-</button>
-
-</div>
-
-`;
-
-});
-
-total.innerHTML =
-`$${suma} MXN`;
-
-contador.innerHTML =
-carrito.length;
-
-}
-
-function eliminarProducto(index){
-
-carrito.splice(index,1);
-
-actualizarCarrito();
-
-}
-
-</script>
-
+    <script src="../../js/carrito.js"></script>
 </body>
 
 </html>

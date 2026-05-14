@@ -20,6 +20,10 @@
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="../../css/tienda.css">
+
     <style>
 
         *{
@@ -127,13 +131,15 @@
             color:#666;
         }
 
-        .btn-ver{
+        /* Mismo aspecto que "Ver catálogo" en camas (.btn-categoria); va después de Bootstrap */
+        a.btn.btn-ver,
+        .categoria-body a.btn-ver{
 
-            background:#111;
+            background-color:#ffc107;
 
-            color:white;
+            border:1px solid #ffc107;
 
-            border:none;
+            color:#111;
 
             padding:12px 25px;
 
@@ -141,14 +147,23 @@
 
             font-weight:bold;
 
-            transition:.3s;
+            transition:background-color .2s ease, border-color .2s ease, color .2s ease;
+
+            text-decoration:none;
+
+            display:inline-block;
+
+            width:100%;
         }
 
-        .btn-ver:hover{
+        a.btn.btn-ver:hover,
+        .categoria-body a.btn-ver:hover{
 
-            background:#ffc107;
+            background-color:#e0aa00;
 
-            color:black;
+            border-color:#e0aa00;
+
+            color:#111;
         }
 
         footer{
@@ -526,6 +541,39 @@ Catálogo profesional de muebles modernos
 </div>
 
 </footer>
+
+<button type="button" class="btn btn-warning carrito-btn carrito-flotante shadow" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas" aria-label="Abrir carrito">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span class="badge-carrito" data-carrito-contador>0</span>
+</button>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="carritoCanvas" aria-labelledby="carritoCanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h4 class="fw-bold mb-0" id="carritoCanvasLabel"><i class="fa-solid fa-cart-shopping me-2"></i>Carrito</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+        <div id="lista-carrito" class="flex-grow-1"></div>
+        <hr class="my-3">
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>Subtotal</span>
+            <span>$<span id="subtotal">0.00</span> MXN</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2 small">
+            <span>IVA (16%)</span>
+            <span>$<span id="iva">0.00</span> MXN</span>
+        </div>
+        <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+            <span>Total</span>
+            <span>$<span id="total">0.00</span> MXN</span>
+        </div>
+        <button type="button" class="btn btn-success w-100 mb-2" onclick="finalizarCompra()"><i class="fa-solid fa-credit-card me-2"></i>Finalizar compra</button>
+        <button type="button" class="btn btn-outline-danger w-100" onclick="vaciarCarrito()">Vaciar carrito</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/carrito.js"></script>
 
 </body>
 
