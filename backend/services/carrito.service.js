@@ -347,16 +347,27 @@ async function listarCarrito(sesionId, rolUsuario) {
 }
 
 async function checkoutAbasto(sesionId, idAdmin) {
+    // Validaciones iniciales
+    if (!sesionId || sesionId.length === 0) {
+        throw new AppError("Sesión inválida", 400, "INVALID_SESSION");
+    }
+    if (!idAdmin || isNaN(parseInt(idAdmin, 10))) {
+        throw new AppError("ID de administrador inválido", 400, "INVALID_ADMIN");
+    }
+
     const pool = await getPool();
     const transaction = new sql.Transaction(pool);
     await transaction.begin();
     try {
         const warnings = [];
+
+        // Verificar si existen las tablas necesarias
         const reqSchema = await new sql.Request(transaction).query(
             `SELECT CASE WHEN OBJECT_ID(N'dbo.MovimientosStock', N'U') IS NOT NULL THEN 1 ELSE 0 END AS has_mov`
         );
         const integrarMov = Number(reqSchema.recordset[0].has_mov) === 1;
 
+        // Obtener líneas del carrito
         const req0 = new sql.Request(transaction);
         req0.input("sesion", sql.NVarChar(100), sesionId);
         const lines = await req0.query(
@@ -366,20 +377,32 @@ async function checkoutAbasto(sesionId, idAdmin) {
        WHERE c.sesion_id = @sesion`
         );
 
-        if (!lines.recordset.length) {
+        if (!lines.recordset || lines.recordset.length === 0) {
             throw new AppError("El carrito está vacío", 400, "EMPTY_CART");
         }
 
+        // Procesar cada línea del carrito
         for (const row of lines.recordset) {
             const idProd = Number(row.id_producto);
             const qty = Number(row.cantidad);
 
+            // Validar datos
+            if (isNaN(idProd) || isNaN(qty) || qty < 1) {
+                throw new AppError(
+                    `Datos inválidos en carrito: producto ${idProd}, cantidad ${qty}`,
+                    400,
+                    "INVALID_CART_DATA"
+                );
+            }
+
+            // Obtener o crear registro de Stock
             const reqChk = new sql.Request(transaction);
             reqChk.input("prod", sql.Int, idProd);
             const chk = await reqChk.query(
                 `SELECT cantidad FROM Stock WITH (UPDLOCK, ROWLOCK) WHERE id_producto = @prod`
             );
-            if (!chk.recordset.length) {
+
+            if (!chk.recordset || chk.recordset.length === 0) {
                 const reqInsStock = new sql.Request(transaction);
                 reqInsStock.input("prod", sql.Int, idProd);
                 await reqInsStock.query(
@@ -388,23 +411,27 @@ async function checkoutAbasto(sesionId, idAdmin) {
                 );
             }
 
-            const currentQty = Number(
-                chk.recordset.length ? chk.recordset[0].cantidad : 0
-            );
+            // Calcular cantidad a agregar
+            const currentQty = chk.recordset && chk.recordset.length > 0 
+                ? Number(chk.recordset[0].cantidad) 
+                : 0;
             const remaining = STOCK_CEILING - currentQty;
             const appliedQty = remaining > 0 ? Math.min(qty, remaining) : 0;
+
             if (appliedQty <= 0) {
                 warnings.push(
                     `Producto #${idProd} ya llegó al máximo permitido (${STOCK_CEILING} uds.). No se agregó inventario adicional.`
                 );
                 continue;
             }
+
             if (appliedQty < qty) {
                 warnings.push(
                     `Producto #${idProd}: solo se agregaron ${appliedQty} de ${qty} uds. porque el resto superaba el máximo permitido (${STOCK_CEILING} uds.).`
                 );
             }
 
+            // Actualizar Stock
             const req1 = new sql.Request(transaction);
             req1.input("prod", sql.Int, idProd);
             req1.input("q", sql.Int, appliedQty);
@@ -416,6 +443,7 @@ async function checkoutAbasto(sesionId, idAdmin) {
          WHERE id_producto = @prod
            AND cantidad + @q <= @cap`
             );
+
             if (upd.rowsAffected[0] === 0) {
                 throw new AppError(
                     `No se pudo registrar el abasto: el producto #${idProd} superaría el inventario máximo permitido (${STOCK_CEILING} uds.). Reduce la cantidad o ajusta STOCK_CEILING_PER_PRODUCT.`,
@@ -424,6 +452,7 @@ async function checkoutAbasto(sesionId, idAdmin) {
                 );
             }
 
+            // Registrar movimiento si existe tabla
             if (integrarMov) {
                 try {
                     const rM = new sql.Request(transaction);
@@ -437,22 +466,32 @@ async function checkoutAbasto(sesionId, idAdmin) {
                             : "Abasto vía carrito (admin)"
                     );
                     await rM.query(
-                        `INSERT INTO MovimientosStock (id_producto, tipo, cantidad, id_referencia, comentario)
-           VALUES (@prod, N'compra_admin', @q, NULL, @com)`
+                        `INSERT INTO MovimientosStock (id_producto, tipo, cantidad, comentario)
+           VALUES (@prod, N'compra_admin', @q, @com)`
                     );
                 } catch (movErr) {
                     const num = movErr.number || movErr.originalError?.info?.number;
-                    if (num === 547) {
+                    const msg = (movErr.message || "").toUpperCase();
+                    
+                    // FK error: tabla tiene restricciones, pero stock se actualizó correctamente
+                    if (num === 547 || msg.includes("FOREIGN KEY") || msg.includes("FK")) {
                         warnings.push(
-                            `Producto #${idProd}: inventario actualizado, pero no se pudo registrar el movimiento histórico por una restricción de base de datos.`
+                            `Producto #${idProd}: stock actualizado (+${appliedQty} uds.), pero no se pudo registrar en histórico de movimientos. (Base de datos: restricción de integridad)`
+                        );
+                    } else if (num === 2627 || msg.includes("UNIQUE")) {
+                        // Constraint UNIQUE: quizás ya existe registro
+                        warnings.push(
+                            `Producto #${idProd}: stock actualizado, pero no se pudo registrar movimiento (ya existe).`
                         );
                     } else {
+                        // Error desconocido: falla la transacción
                         throw movErr;
                     }
                 }
             }
         }
 
+        // Vaciar carrito
         const reqDel = new sql.Request(transaction);
         reqDel.input("sesion", sql.NVarChar(100), sesionId);
         await reqDel.query(`DELETE FROM Carrito WHERE sesion_id = @sesion`);

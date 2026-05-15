@@ -427,6 +427,7 @@
                     var err = new Error(msg);
                     err.status = res.status;
                     err.body = body;
+                    err.meta = body.error && body.error.meta ? body.error.meta : null;
                     err.code =
                         body.error && body.error.code
                             ? String(body.error.code)
@@ -441,6 +442,7 @@
                         } catch (e3) {
                             /* ignore */
                         }
+                            var meta = err && err.meta ? err.meta : null;
                         return request(path, options, true);
                     }
                     throw err;
@@ -665,10 +667,24 @@
                 actualizarCarrito();
             })
             .catch(function (err) {
+                var code = err.code ? String(err.code) : "";
+                var isMaxLinea = code === "MAX_LINEA" || code === "MAX_QUANTITY_EXCEEDED";
+                var isInsuffStock = code === "INSUFFICIENT_STOCK";
+                var icon = isMaxLinea || isInsuffStock ? "warning" : "error";
+                var title = isMaxLinea
+                    ? "Límite de cantidad alcanzado"
+                    : isInsuffStock
+                    ? "Stock insuficiente"
+                    : "No se pudo agregar";
+                var message = isMaxLinea
+                    ? "No puedes agregar más unidades de este producto. El máximo permitido es 30 unidades por línea."
+                    : isInsuffStock
+                    ? "No hay suficiente stock disponible para esa cantidad."
+                    : mensajeErrorApi(err);
                 toastSwal({
-                    icon: err.status === 409 ? "warning" : "error",
-                    title: "No se pudo agregar",
-                    text: mensajeErrorApi(err),
+                    icon: icon,
+                    title: title,
+                    text: message,
                     confirmButtonColor: "#c9a227",
                 });
             });
@@ -789,13 +805,25 @@
                     return;
                 }
                 
+                toastSwal({
+                    icon: "info",
+                    title: "Procesando",
+                    text: esModoAbasto() ? "Registrando entrada a inventario..." : "Finalizando compra...",
+                    allowOutsideClick: false,
+                    didOpen: function () {
+                        if (typeof Swal !== "undefined" && typeof Swal.showLoading === "function") {
+                            Swal.showLoading();
+                        }
+                    }
+                });
+
                 var resp = await request(path, { method: "POST", body: "{}" });
                 var d = resp.data || {};
                 var msg = d.message || "Operación registrada.";
                 var titulo = "Listo";
                 var warnings = Array.isArray(d.warnings) ? d.warnings : [];
                 if (d.modo === "abasto_admin") {
-                    titulo = "Abasto registrado";
+                    titulo = "Abasto registrado correctamente";
                 } else if (d.modo === "venta_cliente") {
                     titulo = "Compra realizada";
                 } else if (esModoAbasto()) {
@@ -808,29 +836,95 @@
                     title: titulo,
                     text: msg,
                     confirmButtonColor: "#c9a227",
+                    allowOutsideClick: true,
+                    didClose: function () {
+                        if (warnings.length) {
+                            mostrarAdvertencias(warnings);
+                        }
+                        actualizarCarrito();
+                        if (esModoAbasto()) {
+                            emitirStockRefresh();
+                        }
+                    }
                 });
-                if (warnings.length) {
-                    mostrarAdvertencias(warnings);
-                }
-                actualizarCarrito();
-                if (esModoAbasto()) {
-                    emitirStockRefresh();
-                }
             } catch (err) {
                 var st = err.status;
-                var icon = st === 409 || st === 403 ? "warning" : "error";
+                var code = err.code ? String(err.code) : "";
+                var baseMsg = mensajeErrorApi(err);
+                
+                var icon = "error";
                 var tituloErr = esModoAbasto()
                     ? "No se pudo registrar el abasto"
                     : "No se pudo finalizar la compra";
-                if (err.code === "USE_ABASTO_ENDPOINT") {
-                    tituloErr = "Flujo incorrecto";
+
+                if (code === "AUTH_REQUIRED") {
+                    tituloErr = "Autenticación requerida";
+                    baseMsg = "Debes iniciar sesión como administrador para registrar abasto.";
                     icon = "warning";
+                } else if (code === "ADMIN_ONLY") {
+                    tituloErr = "Permiso denegado";
+                    baseMsg = "Solo administradores pueden registrar abasto. Inicia sesión con cuenta admin.";
+                    icon = "warning";
+                } else if (code === "EMPTY_CART") {
+                    tituloErr = "Carrito vacío";
+                    baseMsg = esModoAbasto() 
+                        ? "El carrito de abasto está vacío. Agrega productos." 
+                        : "El carrito está vacío. Agrega productos.";
+                    icon = "info";
+                } else if (code === "USE_ABASTO_ENDPOINT") {
+                    tituloErr = "Flujo incorrecto";
+                    baseMsg = "Como administrador, usa el carrito de abasto.";
+                    icon = "warning";
+                } else if (code === "INVALID_SESSION" || code === "SESSION_REQUIRED") {
+                    tituloErr = "Error de sesión";
+                    baseMsg = "Se perdió la sesión del carrito. Recarga la página e intenta nuevamente.";
+                    icon = "warning";
+                } else if (st === 409) {
+                    icon = "warning";
+                    baseMsg = baseMsg || "No se pudo completar la operación por un conflicto de inventario.";
+                } else if (st === 403) {
+                    icon = "warning";
+                    tituloErr = "Permiso denegado";
+                } else if (st === 400) {
+                    baseMsg = baseMsg || "Datos inválidos. Verifica que el carrito sea válido.";
                 }
+
+                console.error("Error en finalizarCompra:", {
+                    status: st,
+                    code: code,
+                    message: err.message || "Sin mensaje",
+                    meta: meta || null,
+                    body: err.body || {}
+                });
+
+                if (meta && typeof meta === "object") {
+                    var detalles = [];
+                    if (meta.constraint) {
+                        detalles.push("Constraint: " + meta.constraint);
+                    }
+                    if (meta.table) {
+                        detalles.push("Tabla: " + meta.table);
+                    }
+                    if (meta.column) {
+                        detalles.push("Columna: " + meta.column);
+                    }
+                    if (meta.sqlNumber) {
+                        detalles.push("SQL: " + meta.sqlNumber);
+                    }
+                    if (detalles.length) {
+                        baseMsg += "<br><br><small style=\"opacity:.85\">" +
+                            escapeHtml(detalles.join(" | ")) +
+                            "</small>";
+                    }
+                }
+
                 toastSwal({
                     icon: icon,
                     title: tituloErr,
-                    text: mensajeErrorApi(err),
+                    html: '<div style="text-align:left; word-wrap: break-word;">' + baseMsg + '</div>',
                     confirmButtonColor: "#c9a227",
+                    confirmButtonText: "Entendido",
+                    allowOutsideClick: true
                 });
             }
         })();

@@ -4,6 +4,8 @@
 function errorHandler(err, req, res, next) {
     const status = err.statusCode || 500;
     const code = err.code || "INTERNAL";
+    const isProd =
+        String(process.env.NODE_ENV || "").toLowerCase() === "production";
     const message =
         status === 500 && !err.isOperational
             ? "Error interno del servidor"
@@ -13,10 +15,16 @@ function errorHandler(err, req, res, next) {
         console.error("[API]", err);
     }
 
-    res.status(status).json({
+    const payload = {
         ok: false,
         error: { code, message },
-    });
+    };
+
+    if (!isProd && err.meta) {
+        payload.error.meta = err.meta;
+    }
+
+    res.status(status).json(payload);
 }
 
 function notFound(req, res) {

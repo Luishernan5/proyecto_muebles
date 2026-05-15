@@ -16,10 +16,25 @@ function mapSqlError(err) {
     if (err && (err.code === "EREQUEST" || err.number)) {
         const num = err.number || err.originalError?.info?.number;
         if (num === 547) {
+            const rawMsg = String(
+                err.message || err.originalError?.info?.message || ""
+            );
+            const fkMatch = rawMsg.match(
+                /FOREIGN KEY constraint\s+["']([^"']+)["']/i
+            );
+            const tableMatch = rawMsg.match(/table\s+["']([^"']+)["']/i);
+            const columnMatch = rawMsg.match(/column '([^']+)'/i);
             return {
                 status: 400,
                 message: "No se pudo guardar: referencia inválida (FK).",
                 code: "FK_VIOLATION",
+                meta: {
+                    constraint: fkMatch ? fkMatch[1] : null,
+                    table: tableMatch ? tableMatch[1] : null,
+                    column: columnMatch ? columnMatch[1] : null,
+                    sqlNumber: num || null,
+                    sqlMessage: rawMsg || null,
+                },
             };
         }
         if (num === 2627 || num === 2601) {
@@ -40,6 +55,7 @@ function errorHandlerWithSql(err, req, res, next) {
             statusCode: mapped.status,
             code: mapped.code,
             message: mapped.message,
+            meta: mapped.meta,
             isOperational: true,
         });
     }

@@ -69,6 +69,27 @@ const checkoutCompra = asyncHandler(async (req, res) => {
 /** Abasto: solo administrador (incrementa inventario). */
 const checkoutAbasto = asyncHandler(async (req, res) => {
     const sesionId = sessionFromRequest(req);
+    
+    if (!req.usuario) {
+        return res.status(403).json({
+            ok: false,
+            error: {
+                message: "Autenticación requerida para abasto",
+                code: "AUTH_REQUIRED"
+            }
+        });
+    }
+
+    if (req.usuario.rol !== "admin") {
+        return res.status(403).json({
+            ok: false,
+            error: {
+                message: "Permiso denegado: solo administradores pueden registrar abasto",
+                code: "ADMIN_ONLY"
+            }
+        });
+    }
+
     const data = await carritoService.checkoutAbasto(
         sesionId,
         req.usuario.id_usuario

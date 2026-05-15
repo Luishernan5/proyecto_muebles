@@ -108,12 +108,12 @@ async function ajustarStock(idProducto, delta, comentario, idAdmin) {
                 rM.input("cant", sql.Int, cantMov);
                 rM.input("com", sql.NVarChar(255), com);
                 await rM.query(
-                    `INSERT INTO MovimientosStock (id_producto, tipo, cantidad, id_referencia, comentario)
-         VALUES (@prod, @tipo, @cant, NULL, @com)`
+                    `INSERT INTO MovimientosStock (id_producto, tipo, cantidad, comentario)
+         VALUES (@prod, @tipo, @cant, @com)`
                 );
             } catch (movErr) {
                 const num = movErr.number || movErr.originalError?.info?.number;
-                if (num === 547) {
+                if (num === 547 || movErr.message?.includes("FOREIGN KEY")) {
                     warnings.push(
                         "El inventario se actualizó, pero no se pudo registrar el movimiento histórico por una restricción de base de datos."
                     );
