@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
@@ -46,21 +46,26 @@ module.exports = {
     stockMin: parseInt(process.env.STOCK_MIN || "1", 10),
     /** Máximo de unidades por producto en carrito (visitante o cliente). */
     cartMaxClient: parseInt(
-        process.env.CART_MAX_CLIENT || process.env.STOCK_MAX || "30",
+        process.env.CART_MAX_CLIENT || process.env.STOCK_MAX || "49",
         10
     ),
     /** Máximo en carrito para sesión autenticada como administrador. */
-    cartMaxAdmin: parseInt(process.env.CART_MAX_ADMIN || "500", 10),
+    cartMaxAdmin: parseInt(process.env.CART_MAX_ADMIN || "50", 10),
     /** Tope de inventario por producto (entradas admin / abasto vía carrito). */
     stockCeilingPerProduct: parseInt(
-        process.env.STOCK_CEILING_PER_PRODUCT || "999",
+        process.env.STOCK_CEILING_PER_PRODUCT || "50",
         10
     ),
     /** @deprecated usar cartMaxClient; se mantiene por compatibilidad. */
     stockMax: parseInt(
-        process.env.CART_MAX_CLIENT || process.env.STOCK_MAX || "30",
+        process.env.CART_MAX_CLIENT || process.env.STOCK_MAX || "49",
         10
     ),
     jwtSecret,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
+    gmailUser: String(process.env.GMAIL_USER || "").trim(),
+    gmailAppPassword: String(process.env.GMAIL_APP_PASSWORD || "").trim(),
+    gmailFromName: String(process.env.GMAIL_FROM_NAME || "Punto de Venta Muebles").trim(),
 };
+
+module.exports.envConfig = module.exports;

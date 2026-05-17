@@ -49,26 +49,24 @@ async function ajustarStock(idProducto, delta, comentario, idAdmin) {
         const currentQty = Number(chk.recordset[0].cantidad || 0);
         let upd;
         if (d > 0) {
-            const applied = Math.max(0, Math.min(d, cap - currentQty));
-            if (applied <= 0) {
-                warnings.push(
-                    `El producto #${id} ya alcanzó el máximo permitido (${cap} uds.). No se agregó inventario adicional.`
+            const space = cap - currentQty;
+            if (space <= 0) {
+                throw new AppError(
+                    `No se pueden agregar más unidades: el stock máximo por producto es ${cap} unidades.`,
+                    409,
+                    "ABASTO_STOCK_CAP"
                 );
-                await transaction.commit();
-                return {
-                    id_producto: id,
-                    cantidad: currentQty,
-                    warnings,
-                };
             }
-            if (applied < d) {
-                warnings.push(
-                    `Solo se agregaron ${applied} de ${d} uds. porque el resto superaba el máximo permitido (${cap} uds.).`
+            if (d > space) {
+                throw new AppError(
+                    `No se pueden agregar más unidades: el stock máximo por producto es ${cap} unidades. Espacio disponible: ${space}.`,
+                    409,
+                    "ABASTO_STOCK_CAP"
                 );
             }
             const reqPos = new sql.Request(transaction);
             reqPos.input("prod", sql.Int, id);
-            reqPos.input("d", sql.Int, applied);
+            reqPos.input("d", sql.Int, d);
             reqPos.input("cap", sql.Int, cap);
             upd = await reqPos.query(
                 `UPDATE Stock

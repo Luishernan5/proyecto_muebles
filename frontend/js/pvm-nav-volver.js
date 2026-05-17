@@ -107,4 +107,32 @@
     } else {
         insertarBarra();
     }
+
+    // Asegurar un único enlace de 'Iniciar sesión' en páginas cliente (no admin).
+    function insertarLoginLinkSiFalta() {
+        try {
+            var path = (window.location.pathname || "").replace(/\\/g, "/");
+            if (/^\/pages\/admin\//i.test(path)) return;
+            var nav = document.querySelector("nav.navbar");
+            if (!nav) return;
+            // buscar links existentes hacia login cliente
+            var exists = nav.querySelector('a[href="/pages/login.html"], a[href="pages/login.html"], a[href="../login.html"], a[href="/login.html"], a[href="login.html"]');
+            if (exists) return;
+            var cont = nav.querySelector('.container') || nav;
+            var a = document.createElement('a');
+            a.href = '/pages/login.html';
+            a.className = 'btn btn-outline-light btn-sm ms-auto';
+            a.textContent = 'Iniciar sesión';
+            // intentar insertar al final del contenedor
+            cont.appendChild(a);
+        } catch (e) {
+            /* ignore */
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", insertarLoginLinkSiFalta);
+    } else {
+        insertarLoginLinkSiFalta();
+    }
 })();

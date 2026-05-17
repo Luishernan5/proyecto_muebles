@@ -14,5 +14,10 @@ router.delete("/", carritoController.vaciar);
 router.post("/compra", carritoController.checkoutCompra);
 router.post("/abasto", requireAdmin, carritoController.checkoutAbasto);
 router.post("/checkout", carritoController.checkoutLegacy);
+router.get("/remision/:idPedido/pdf", carritoController.remisionPdf);
+router.post("/remision/:idPedido/email", carritoController.remisionCorreo);
+router.post("/remision/:idPedido/cancelar", carritoController.cancelarPedidoRemision);
+router.post("/remision/:idPedido/whatsapp", carritoController.remisionWhatsApp);
 
 module.exports = router;
+

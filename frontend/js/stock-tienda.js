@@ -1,6 +1,6 @@
 /**
- * Muestra stock real por producto (API) con semáforo: mucho = verde, medio = naranja, poco = rojo.
- * Opcional: window.PVM_STOCK_NIVELES = { altoMin: 15, medioMin: 4 };
+ * Muestra stock real por producto (API) con semáforo de 3 colores.
+ * Rojo = bajo, naranja = medio, verde = alto.
  */
 (function () {
     "use strict";
@@ -21,23 +21,22 @@
         };
     }
 
-    function cantidadMostrada(p) {
-        if (!p) return 0;
-        if (typeof p.disponible === "number" && !isNaN(p.disponible)) {
-            return Math.max(0, p.disponible);
+    function cantidadTotal(p) {
+        if (!p || typeof p.stock !== "number" || isNaN(p.stock)) {
+            return 0;
         }
-        if (typeof p.stock === "number" && !isNaN(p.stock)) {
-            return Math.max(0, p.stock);
-        }
-        return 0;
+        return Math.max(0, p.stock);
     }
 
-    function nivelParaCantidad(n) {
+    function nivelParaCantidad(total) {
         var u = niveles();
-        if (n <= 0) return "bajo";
-        if (n >= u.altoMin) return "alto";
-        if (n >= u.medioMin) return "medio";
+        if (total >= u.altoMin) return "alto";
+        if (total >= u.medioMin) return "medio";
         return "bajo";
+    }
+
+    function textoUnidad(n, singular, plural) {
+        return n === 1 ? singular : plural;
     }
 
     function idDesdeOnclick(el) {
@@ -76,18 +75,16 @@
         s.id = "pvm-stock-niveles-style";
         s.textContent =
             "p.stock.stock--alto{color:#146c43!important;font-weight:600;background:rgba(25,135,84,.12)!important;border-radius:.5rem;padding:.45rem .65rem;display:inline-flex;align-items:center;gap:.45rem;margin-bottom:.75rem;}" +
-            "p.stock.stock--medio{color:#b45309!important;font-weight:600;background:rgba(245,158,11,.18)!important;border-radius:.5rem;padding:.45rem .65rem;display:inline-flex;align-items:center;gap:.45rem;margin-bottom:.75rem;}" +
-            "p.stock.stock--bajo{color:#b42318!important;font-weight:600;background:rgba(220,53,69,.12)!important;border-radius:.5rem;padding:.45rem .65rem;display:inline-flex;align-items:center;gap:.45rem;margin-bottom:.75rem;}" +
+            "p.stock.stock--medio{color:#b26a00!important;font-weight:600;background:rgba(255,193,7,.14)!important;border-radius:.5rem;padding:.45rem .65rem;display:inline-flex;align-items:center;gap:.45rem;margin-bottom:.75rem;}" +
+            "p.stock.stock--bajo{color:#b02a37!important;font-weight:600;background:rgba(220,53,69,.12)!important;border-radius:.5rem;padding:.45rem .65rem;display:inline-flex;align-items:center;gap:.45rem;margin-bottom:.75rem;}" +
             "p.stock.stock--alto i,p.stock.stock--medio i,p.stock.stock--bajo i{font-size:1rem;}" +
             "p.stock .pvm-stock-num{font-weight:800;}";
         document.head.appendChild(s);
     }
 
-    function textoStock(n, nivel) {
-        if (n <= 0) {
-            return (
-                '<i class="fa-solid fa-circle-xmark"></i> Sin unidades disponibles'
-            );
+    function textoStock(total, nivel) {
+        if (total <= 0) {
+            return '<i class="fa-solid fa-circle-xmark"></i> Sin unidades disponibles';
         }
         var icon =
             nivel === "alto"
@@ -95,20 +92,16 @@
                 : nivel === "medio"
                   ? "fa-triangle-exclamation"
                   : "fa-circle-exclamation";
-        var leyenda =
-            nivel === "alto"
-                ? "Buen inventario"
-                : nivel === "medio"
-                  ? "Inventario medio"
-                  : "Pocas unidades";
+        var leyenda = nivel === "alto" ? "Buen inventario" : "Inventario";
         return (
             '<i class="fa-solid ' +
             icon +
             '"></i> ' +
             leyenda +
             ': <span class="pvm-stock-num">' +
-            n +
-            "</span> uds. disponibles"
+            total +
+            "</span> " +
+            textoUnidad(total, "unidad total", "unidades totales")
         );
     }
 
@@ -120,12 +113,12 @@
             if (id == null) continue;
             var prod = mapa[id];
             if (!prod) continue;
-            var n = cantidadMostrada(prod);
-            var nivel = nivelParaCantidad(n);
+            var total = cantidadTotal(prod);
+            var nivel = nivelParaCantidad(total);
             el.classList.remove("stock--alto", "stock--medio", "stock--bajo");
             el.classList.add("stock--" + nivel);
-            el.innerHTML = textoStock(n, nivel);
-            el.setAttribute("data-pvm-stock-n", String(n));
+            el.innerHTML = textoStock(total, nivel);
+            el.setAttribute("data-pvm-stock-n", String(total));
         }
     }
 
@@ -215,12 +208,10 @@
     async function init() {
         await refrescarStockDesdeApi();
 
-        // Refresca inventario cuando el carrito/admin notifica cambios de stock.
         window.addEventListener("pvm:stock-refresh", function () {
             void refrescarStockDesdeApi();
         });
 
-        // Refresco suave para mantener vista sincronizada sin recargar.
         window.setInterval(function () {
             void refrescarStockDesdeApi();
         }, 12000);

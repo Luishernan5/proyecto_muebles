@@ -1,39 +1,35 @@
-/*
-  PuntoVentaMuebles — compatibilidad con pedidos de invitado (carrito por sesión).
-  Permite: id_usuario NULL cuando compra quien no ha iniciado sesión (usa sesion_id).
-*/
-
 USE PuntoVentaMuebles;
-GO
 
--- Agregar columna sesion_id si no existe
 IF COL_LENGTH(N'dbo.Pedidos', N'sesion_id') IS NULL
 BEGIN
     ALTER TABLE dbo.Pedidos ADD sesion_id NVARCHAR(100) NULL;
-END
-GO
+END;
 
--- Eliminar FK si existe
-DECLARE @ConstraintName NVARCHAR(MAX);
-SET @ConstraintName = (
-    SELECT CONSTRAINT_NAME 
-    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
-    WHERE TABLE_NAME = 'Pedidos' AND REFERENCED_TABLE_NAME = 'Usuarios'
-);
+DECLARE @fk SYSNAME;
 
-IF @ConstraintName IS NOT NULL
-    EXEC('ALTER TABLE dbo.Pedidos DROP CONSTRAINT ' + @ConstraintName);
-GO
+SELECT TOP (1) @fk = fk.name
+FROM sys.foreign_keys AS fk
+WHERE fk.parent_object_id = OBJECT_ID(N'dbo.Pedidos')
+  AND fk.referenced_object_id = OBJECT_ID(N'dbo.Usuarios')
+  AND fk.name = N'FK_Pedidos_Usuarios';
+
+IF @fk IS NOT NULL
+BEGIN
+    DECLARE @sql NVARCHAR(MAX);
+    SET @sql = N'ALTER TABLE dbo.Pedidos DROP CONSTRAINT ' + QUOTENAME(@fk);
+    EXEC sys.sp_executesql @sql;
+END;
 
 ALTER TABLE dbo.Pedidos ALTER COLUMN id_usuario INT NULL;
-GO
 
--- Recrear FK
 IF NOT EXISTS (
-    SELECT 1 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
-    WHERE CONSTRAINT_NAME = 'FK_Pedidos_Usuarios'
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE name = N'FK_Pedidos_Usuarios'
+      AND parent_object_id = OBJECT_ID(N'dbo.Pedidos')
 )
-    ALTER TABLE dbo.Pedidos ADD CONSTRAINT FK_Pedidos_Usuarios
+BEGIN
+    ALTER TABLE dbo.Pedidos WITH CHECK
+    ADD CONSTRAINT FK_Pedidos_Usuarios
         FOREIGN KEY (id_usuario) REFERENCES dbo.Usuarios (id_usuario);
-END
-GO
+END;

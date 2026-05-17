@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso de administración | Punto Venta Muebles</title>
+    <title>Inicio de sesión de administración | Punto Venta Muebles</title>
     <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
+    <script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <style>
         body {
             min-height: 100vh;
@@ -102,13 +103,13 @@
                         <div>
                             <span class="pill pill-admin mb-3">Portal de administración</span>
                             <h1 class="display-6 fw-bold mb-3">Acceso al panel de abasto</h1>
-                            <p class="lead mb-0 text-white-75">Zona reservada para personal autorizado. Desde aquí se entra a la tienda admin y a los ajustes de inventario.</p>
+                            <p class="lead mb-0 text-white-75">Zona reservada para personal autorizado. Inicia sesión con una cuenta de administrador para entrar a inventario.</p>
                         </div>
                         <div class="mt-4 pt-2">
                             <ul class="admin-features">
                                 <li><span class="feature-dot"></span><span>Validación de cuenta y rol antes de abrir el panel.</span></li>
                                 <li><span class="feature-dot"></span><span>Acceso al carrito de abasto y al ajuste por ID.</span></li>
-                                <li><span class="feature-dot"></span><span>Salida rápida hacia la tienda pública cuando lo necesites.</span></li>
+                                <li><span class="feature-dot"></span><span>Sesión independiente de la tienda cliente.</span></li>
                             </ul>
                         </div>
                     </div>
@@ -117,17 +118,25 @@
                             <div>
                                 <span class="pill bg-success-subtle text-success-emphasis mb-3">Administrador</span>
                                 <h2 class="h3 fw-bold mb-2">Entrar con credenciales</h2>
-                                <p class="text-muted mb-0">Usa tu correo y contraseña para abrir la sesión de administración.</p>
+                                <p class="text-muted mb-0">Usa tu correo y contraseña de administrador para abrir la sesión de administración.</p>
                             </div>
-                            <a href="../login.html?mode=admin&redirect=%2Fpages%2Fadmin%2Ftienda.html" class="btn btn-success btn-sm rounded-pill">Ir al login</a>
+                            <a href="../login.html" class="btn btn-outline-success btn-sm rounded-pill">Login cliente</a>
                         </div>
 
-                        <div class="alert alert-warning small mb-4">
-                            Si ya tienes una sesión válida, puedes ir directo al panel. Si no, primero autentícate para validar el rol.
-                        </div>
+                        <form id="f-admin-login" novalidate>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="email">Correo electrónico</label>
+                                <input type="email" class="form-control form-control-lg" id="email" required autocomplete="username" placeholder="admin@ejemplo.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="password">Contraseña</label>
+                                <input type="password" class="form-control form-control-lg" id="password" required autocomplete="current-password" placeholder="••••••••">
+                            </div>
+                            <div id="err" class="alert alert-danger py-2 small d-none" role="alert"></div>
+                            <button type="submit" class="btn btn-success w-100 py-3 fw-semibold">Entrar al panel</button>
+                        </form>
 
-                        <div class="d-grid gap-2 d-sm-flex">
-                            <a href="../login.html?mode=admin&redirect=%2Fpages%2Fadmin%2Ftienda.html" class="btn btn-success btn-lg px-4">Continuar al login</a>
+                        <div class="d-grid gap-2 d-sm-flex mt-3">
                             <a href="/index.html" class="btn btn-outline-secondary btn-lg px-4">Ir a tienda cliente</a>
                         </div>
 
@@ -142,5 +151,85 @@
         </div>
     </div>
 </div>
+<script>
+(function () {
+    var JWT_KEY = "pvm_jwt";
+    function apiRoot() {
+        return (window.PVM_API && String(window.PVM_API).replace(/\/$/, "")) || "/api";
+    }
+    function redirectSeguro(url, defecto) {
+        if (!url || typeof url !== "string") return defecto;
+        if (/^https?:/i.test(url) || url.indexOf("//") === 0) return defecto;
+        if (url.charAt(0) !== "/") return defecto;
+        if (!/^\/pages\/admin\//i.test(url)) return defecto;
+        return url;
+    }
+    function destinoAdmin(pedido) {
+        return redirectSeguro(pedido, "/pages/admin/tienda.html");
+    }
+    function mostrarAlerta(icono, titulo, texto) {
+        if (typeof Swal !== "undefined") {
+            return Swal.fire({
+                icon: icono,
+                title: titulo,
+                text: texto,
+                confirmButtonColor: "#198754",
+            });
+        }
+        alert(titulo + ": " + texto);
+        return Promise.resolve();
+    }
+    var form = document.getElementById("f-admin-login");
+    var btn = form.querySelector("button[type='submit']");
+    form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        void (async function () {
+            var err = document.getElementById("err");
+            err.classList.add("d-none");
+            btn.disabled = true;
+            try {
+                var email = document.getElementById("email").value.trim();
+                var password = document.getElementById("password").value;
+                var q = new URLSearchParams(window.location.search);
+                var pedido = q.get("redirect");
+                var r = await fetch(apiRoot() + "/auth/login-admin", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email, password: password }),
+                });
+                var text = await r.text();
+                var body = {};
+                try { body = text ? JSON.parse(text) : {}; } catch (e) { body = {}; }
+                if (body && body.ok === false) {
+                    var em = (body.error && body.error.message) || "No se pudo iniciar sesión";
+                    throw new Error(em);
+                }
+                if (!r.ok) {
+                    var m = (body.error && body.error.message) || "Error " + r.status;
+                    if (body.error && body.error.code === "ROLE_MISMATCH") {
+                        m = "La cuenta no es de administrador. Usa una cuenta admin para entrar al panel.";
+                    }
+                    throw new Error(m);
+                }
+                var t = body.data && body.data.token;
+                var u = body.data && body.data.usuario;
+                if (!t || !u) throw new Error("Respuesta inválida del servidor");
+                if (String(u.rol || "").toLowerCase() !== "admin") {
+                    throw new Error("Esta pantalla solo permite cuentas de administrador.");
+                }
+                localStorage.setItem(JWT_KEY, t);
+                await mostrarAlerta("success", "Acceso correcto", "Bienvenido al panel de administración.");
+                window.location.href = destinoAdmin(pedido);
+            } catch (e) {
+                await mostrarAlerta("error", "No se pudo iniciar sesión", e.message || "Verifica tus credenciales.");
+                err.textContent = e.message || "No se pudo iniciar sesión";
+                err.classList.remove("d-none");
+            } finally {
+                btn.disabled = false;
+            }
+        })();
+    });
+})();
+</script>
 </body>
 </html>

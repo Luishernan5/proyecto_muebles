@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración — Abasto | Punto Venta Muebles</title>
     <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+    <script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/tienda.css">
     <style>
@@ -15,6 +15,7 @@
         .navbar-pvm-admin .navbar-brand { color: #fff !important; }
         .pvm-admin-badge { font-size: 0.7rem; vertical-align: middle; }
         #pvm-gate-loading { min-height: 100vh; }
+        .pvm-admin-nav-links .btn { white-space: nowrap; }
     </style>
     <script>window.PVM_APP_CONTEXT = "tienda_admin";</script>
 </head>
@@ -40,6 +41,9 @@
                 <li class="nav-item"><a class="nav-link" href="#categorias">Categorías</a></li>
                 <li class="nav-item"><a class="nav-link" href="stock.html">Ajuste por ID</a></li>
                 <li class="nav-item"><a class="nav-link" href="/index.html">Tienda cliente</a></li>
+                    <li class="nav-item ms-lg-3 mt-3 mt-lg-0 pvm-admin-nav-links d-flex gap-2 flex-wrap justify-content-lg-end">
+                    <a href="login.html" class="btn btn-outline-light btn-sm">Cambiar usuario</a>
+                </li>
                 <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
                     <button class="btn btn-warning position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoCanvas">
                         <i class="fa-solid fa-dolly"></i>
@@ -104,9 +108,8 @@
 <footer class="footer text-center text-white py-4 mt-5">
     <h4 class="fw-bold">Punto Venta Muebles</h4>
     <p class="small mb-2 opacity-75">Apartado de administración — solo abasto e inventario.</p>
-    <p class="small mb-0">
-        <a href="/index.html" class="text-white-50 text-decoration-none me-3">Tienda cliente</a>
-        <a href="login.html" class="text-white-50 text-decoration-none">Cambiar usuario</a>
+        <p class="small mb-0">
+        <a href="/index.html" class="text-white-50 text-decoration-none">Tienda cliente</a>
     </p>
 </footer>
 
@@ -137,6 +140,7 @@
 
 <script src="/vendor/bootstrap5/bootstrap.bundle.min.js"></script>
 <script>
+    window.PVM_STOCK_CEILING = 50;
 (function () {
     var JWT_KEY = "pvm_jwt";
     function apiRoot() {

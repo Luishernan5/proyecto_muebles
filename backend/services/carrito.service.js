@@ -81,7 +81,10 @@ function validarCantidadEntera(cantidad, campo = "cantidad") {
 }
 
 function maxPermitidoSesion({ stock, reservado, cantidadActualLinea }) {
-    return stock - (reservado - cantidadActualLinea);
+    // Evitar que las sesiones reserven todo el stock dejando menos de STOCK_MIN.
+    // Permitimos como máximo que la suma de reservas llegue a `stock - STOCK_MIN`.
+    const permitido = stock - (reservado - cantidadActualLinea) - STOCK_MIN;
+    return Math.max(0, permitido);
 }
 
 async function agregarItem(sesionId, idProducto, cantidad, rolUsuario) {
@@ -107,8 +110,8 @@ async function agregarItem(sesionId, idProducto, cantidad, rolUsuario) {
         reqLock.input("prod", sql.Int, id);
         const lockRes = await reqLock.query(
             `SELECT s.cantidad FROM Stock s WITH (UPDLOCK, ROWLOCK)
-       INNER JOIN Productos p ON p.id_producto = s.id_producto AND p.activo = 1
-       WHERE s.id_producto = @prod`
+      INNER JOIN Productos p ON p.id_producto = s.id_producto AND p.activo = 1
+      WHERE s.id_producto = @prod`
         );
         if (!lockRes.recordset.length) {
             throw new AppError(
@@ -123,22 +126,30 @@ async function agregarItem(sesionId, idProducto, cantidad, rolUsuario) {
         const actualLinea = existente ? Number(existente.cantidad) : 0;
         const nueva = actualLinea + q;
 
-        const maxPerm = esRolAdmin(rolUsuario)
-            ? maxLinea
-            : maxPermitidoSesion({
-                  stock,
-                  reservado,
-                  cantidadActualLinea: actualLinea,
-              });
+        // Para administradores, no permitir que la cantidad en carrito haga que
+        // el inventario final supere STOCK_CEILING. Calculamos el máximo permitido
+        // como el mínimo entre `maxLinea` (límite por sesión/rol) y el espacio
+        // restante hasta `STOCK_CEILING` considerando la línea actual.
+        let maxPerm;
+        if (esRolAdmin(rolUsuario)) {
+            const espacioHastaTope = STOCK_CEILING - stock;
+            // Nuevo máximo absoluto en la línea = actualLinea + espacioHastaTope
+            const maxPorTecho = actualLinea + Math.max(0, espacioHastaTope);
+            maxPerm = Math.min(maxLinea, maxPorTecho);
+        } else {
+            maxPerm = maxPermitidoSesion({
+                stock,
+                reservado,
+                cantidadActualLinea: actualLinea,
+            });
+        }
         if (nueva > maxPerm) {
-            const puedeAgregar = Math.max(0, maxPerm - actualLinea);
-            throw new AppError(
-                esRolAdmin(rolUsuario)
-                    ? `Superas el máximo de ${maxLinea} unidades por producto en el carrito de abasto. Puedes agregar como máximo ${puedeAgregar} unidad(es) más.`
-                    : `Stock insuficiente (incluye unidades ya reservadas en otros carritos). Puedes agregar como máximo ${puedeAgregar} unidad(es) más.`,
-                esRolAdmin(rolUsuario) ? 400 : 409,
-                esRolAdmin(rolUsuario) ? "MAX_LINEA" : "INSUFFICIENT_STOCK"
-            );
+            const code = esRolAdmin(rolUsuario) ? "MAX_LINEA" : "INSUFFICIENT_STOCK";
+            const status = esRolAdmin(rolUsuario) ? 400 : 409;
+            const msg = esRolAdmin(rolUsuario)
+                ? `Cantidad no válida: la línea no puede superar ${maxPerm} unidades (tope por inventario y rol).`
+                : `No se pueden agregar más unidades: máximo permitido ahora ${maxPerm}.`;
+            throw new AppError(msg, status, code);
         }
         if (nueva > maxLinea) {
             throw new AppError(
@@ -153,7 +164,7 @@ async function agregarItem(sesionId, idProducto, cantidad, rolUsuario) {
             reqU.input("id", sql.Int, existente.id_carrito);
             reqU.input("nueva", sql.Int, nueva);
             await reqU.query(
-                `UPDATE Carrito SET cantidad = @nueva, fecha_agregado = GETDATE()
+                `UPDATE Carrito SET cantidad = @nueva
          WHERE id_carrito = @id`
             );
         } else {
@@ -204,28 +215,33 @@ async function actualizarCantidad(idCarrito, sesionId, cantidad, rolUsuario) {
         );
 
         const { stock, reservado } = await resumenStock(idProd, transaction);
-        const maxPerm = esRolAdmin(rolUsuario)
-            ? maxLinea
-            : maxPermitidoSesion({
-                  stock,
-                  reservado,
-                  cantidadActualLinea: actual,
-              });
+        // Igual que en agregarItem: para admin respetar STOCK_CEILING
+        let maxPerm;
+        if (esRolAdmin(rolUsuario)) {
+            const espacioHastaTope = STOCK_CEILING - stock;
+            const maxPorTecho = actual + Math.max(0, espacioHastaTope);
+            maxPerm = Math.min(maxLinea, maxPorTecho);
+        } else {
+            maxPerm = maxPermitidoSesion({
+                stock,
+                reservado,
+                cantidadActualLinea: actual,
+            });
+        }
         if (nueva > maxPerm) {
-            throw new AppError(
-                esRolAdmin(rolUsuario)
-                    ? `Cantidad no válida. Máximo ${maxLinea} unidades por producto en carrito de abasto.`
-                    : `Cantidad no válida. Máximo permitido ahora: ${maxPerm}.`,
-                esRolAdmin(rolUsuario) ? 400 : 409,
-                esRolAdmin(rolUsuario) ? "MAX_LINEA" : "INSUFFICIENT_STOCK"
-            );
+            const code = esRolAdmin(rolUsuario) ? "MAX_LINEA" : "INSUFFICIENT_STOCK";
+            const status = esRolAdmin(rolUsuario) ? 400 : 409;
+            const msg = esRolAdmin(rolUsuario)
+                ? `Cantidad no válida. Máximo ${maxPerm} unidades por producto en carrito de abasto.`
+                : `Cantidad no válida. Máximo permitido ahora: ${maxPerm}.`;
+            throw new AppError(msg, status, code);
         }
 
         const req2 = new sql.Request(transaction);
         req2.input("id", sql.Int, idCarrito);
         req2.input("n", sql.Int, nueva);
         await req2.query(
-            `UPDATE Carrito SET cantidad = @n, fecha_agregado = GETDATE() WHERE id_carrito = @id`
+            `UPDATE Carrito SET cantidad = @n WHERE id_carrito = @id`
         );
 
         await transaction.commit();
@@ -261,18 +277,9 @@ async function vaciar(sesionId, rolUsuario) {
 }
 
 function advertenciasDesdeLineas(lineas) {
-    const warnings = [];
-    for (const L of lineas) {
-        if (L.disponible_global <= 3 && L.disponible_global > 0) {
-            warnings.push(
-                `Pocas unidades disponibles de «${L.nombre}» (${L.disponible_global} libres en total).`
-            );
-        }
-        if (L.disponible_global === 0) {
-            warnings.push(`«${L.nombre}» está totalmente reservado en carritos.`);
-        }
-    }
-    return warnings;
+    // Solo mantenemos un arreglo vacío para no mostrar alertas de stock bajo.
+    // La validación real de compra la hace el checkout contra el stock de la BD.
+    return [];
 }
 
 async function listarCarrito(sesionId, rolUsuario) {
@@ -301,7 +308,7 @@ async function listarCarrito(sesionId, rolUsuario) {
         WHERE x.id_producto = c.id_producto
       ) r
       WHERE c.sesion_id = @sesion
-      ORDER BY c.fecha_agregado`
+            ORDER BY c.id_carrito`
         );
 
     const lineas = result.recordset.map((row) => {
@@ -309,16 +316,21 @@ async function listarCarrito(sesionId, rolUsuario) {
         const reservado = Number(row.reservado);
         const cantidad = Number(row.cantidad);
         const disponible_global = stock - reservado;
-        const max_linea = esRolAdmin(rolUsuario)
-            ? maxLinea
-            : Math.min(
-                  maxLinea,
-                  maxPermitidoSesion({
-                      stock,
-                      reservado,
-                      cantidadActualLinea: cantidad,
-                  })
-              );
+        let max_linea;
+        if (esRolAdmin(rolUsuario)) {
+            const espacioHastaTope = STOCK_CEILING - stock;
+            const maxPorTecho = cantidad + Math.max(0, espacioHastaTope);
+            max_linea = Math.min(maxLinea, maxPorTecho);
+        } else {
+            max_linea = Math.min(
+                maxLinea,
+                maxPermitidoSesion({
+                    stock,
+                    reservado,
+                    cantidadActualLinea: cantidad,
+                })
+            );
+        }
         return {
             id_carrito: Number(row.id_carrito),
             id_producto: Number(row.id_producto),
@@ -344,6 +356,200 @@ async function listarCarrito(sesionId, rolUsuario) {
         total,
         warnings: esRolAdmin(rolUsuario) ? [] : advertenciasDesdeLineas(lineas),
     };
+}
+
+async function obtenerRemisionPedido(idPedido, sesionId) {
+    const pedido = parseInt(idPedido, 10);
+    if (Number.isNaN(pedido) || pedido < 1) {
+        throw new AppError("ID de pedido inválido", 400, "INVALID_ORDER_ID");
+    }
+
+    const pool = await getPool();
+    const req = pool.request();
+    req.input("idPedido", sql.Int, pedido);
+    req.input("sesionId", sql.NVarChar(100), sesionId || null);
+
+    const r = await req.query(
+        `SELECT
+            p.id_pedido,
+            p.total,
+            p.estado,
+            p.sesion_id,
+            p.fecha_pedido,
+            dp.id_producto,
+            pr.nombre,
+            dp.cantidad,
+            dp.precio_unitario
+         FROM Pedidos p
+         INNER JOIN DetallePedido dp ON dp.id_pedido = p.id_pedido
+         INNER JOIN Productos pr ON pr.id_producto = dp.id_producto
+         WHERE p.id_pedido = @idPedido
+           AND (@sesionId IS NULL OR p.sesion_id = @sesionId)
+         ORDER BY dp.id_detalle ASC`
+    );
+
+    if (!r.recordset || !r.recordset.length) {
+        throw new AppError(
+            "No se encontró la nota de remisión solicitada",
+            404,
+            "ORDER_NOT_FOUND"
+        );
+    }
+
+    const cabecera = r.recordset[0];
+    const items = r.recordset.map((row) => ({
+        id_producto: Number(row.id_producto),
+        nombre: row.nombre,
+        cantidad: Number(row.cantidad),
+        precio_unitario: Number(row.precio_unitario),
+        importe: Math.round(Number(row.cantidad) * Number(row.precio_unitario) * 100) / 100,
+    }));
+
+    const subtotal = items.reduce((acc, item) => acc + item.importe, 0);
+    const iva = Math.round(subtotal * 0.16 * 100) / 100;
+    const total = Math.round((subtotal + iva) * 100) / 100;
+
+    return {
+        id_pedido: Number(cabecera.id_pedido),
+        fecha_pedido: cabecera.fecha_pedido,
+        estado: cabecera.estado,
+        sesion_id: cabecera.sesion_id,
+        subtotal,
+        iva,
+        total,
+        items,
+    };
+}
+
+async function cancelarPedido(idPedido, sesionId) {
+    const pedido = parseInt(idPedido, 10);
+    const sesion = String(sesionId || "").trim();
+
+    if (Number.isNaN(pedido) || pedido < 1) {
+        throw new AppError("ID de pedido inválido", 400, "INVALID_ORDER_ID");
+    }
+    if (!sesion) {
+        throw new AppError("Sesión inválida", 400, "INVALID_SESSION");
+    }
+
+    const pool = await getPool();
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    try {
+        const reqPedido = new sql.Request(transaction);
+        reqPedido.input("idPedido", sql.Int, pedido);
+        reqPedido.input("sesionId", sql.NVarChar(100), sesion);
+        const pedidoRes = await reqPedido.query(
+            `SELECT id_pedido, estado, sesion_id
+             FROM Pedidos WITH (UPDLOCK, HOLDLOCK)
+             WHERE id_pedido = @idPedido
+               AND sesion_id = @sesionId`
+        );
+
+        if (!pedidoRes.recordset.length) {
+            throw new AppError(
+                "No se encontró el pedido solicitado",
+                404,
+                "ORDER_NOT_FOUND"
+            );
+        }
+
+        const pedidoRow = pedidoRes.recordset[0];
+        if (String(pedidoRow.estado || "").toLowerCase() === "cancelado") {
+            throw new AppError(
+                "El pedido ya fue cancelado",
+                409,
+                "ORDER_ALREADY_CANCELLED"
+            );
+        }
+
+        const detallesRes = await new sql.Request(transaction)
+            .input("idPedido", sql.Int, pedido)
+            .query(
+                `SELECT id_producto, cantidad
+                 FROM DetallePedido
+                 WHERE id_pedido = @idPedido`
+            );
+
+        if (!detallesRes.recordset.length) {
+            throw new AppError(
+                "El pedido no tiene detalle para cancelar",
+                400,
+                "ORDER_EMPTY"
+            );
+        }
+
+        const hasMovRes = await new sql.Request(transaction).query(
+            `SELECT CASE WHEN OBJECT_ID(N'dbo.MovimientosStock', N'U') IS NOT NULL THEN 1 ELSE 0 END AS has_mov`
+        );
+        const registrarMovimientos = Number(hasMovRes.recordset[0].has_mov) === 1;
+
+        for (const detalle of detallesRes.recordset) {
+            const idProducto = Number(detalle.id_producto);
+            const cantidad = Number(detalle.cantidad);
+
+            const lockStockReq = new sql.Request(transaction);
+            lockStockReq.input("prod", sql.Int, idProducto);
+            const stockRow = await lockStockReq.query(
+                `SELECT cantidad
+                 FROM Stock WITH (UPDLOCK, ROWLOCK)
+                 WHERE id_producto = @prod`
+            );
+
+            if (!stockRow.recordset.length) {
+                throw new AppError(
+                    `Producto #${idProducto} no tiene registro de stock.`,
+                    400,
+                    "NO_STOCK_RECORD"
+                );
+            }
+
+            const updStockReq = new sql.Request(transaction);
+            updStockReq.input("prod", sql.Int, idProducto);
+            updStockReq.input("q", sql.Int, cantidad);
+            await updStockReq.query(
+                `UPDATE Stock
+                 SET cantidad = cantidad + @q,
+                     fecha_actualizacion = GETDATE()
+                 WHERE id_producto = @prod`
+            );
+
+            if (registrarMovimientos) {
+                const movReq = new sql.Request(transaction);
+                movReq.input("prod", sql.Int, idProducto);
+                movReq.input("q", sql.Int, cantidad);
+                movReq.input("ref", sql.Int, pedido);
+                movReq.input(
+                    "com",
+                    sql.NVarChar(255),
+                    `Cancelación pedido #${pedido}`
+                );
+                await movReq.query(
+                    `INSERT INTO MovimientosStock (id_producto, tipo, cantidad, id_referencia, comentario)
+                     VALUES (@prod, N'ajuste', @q, @ref, @com)`
+                );
+            }
+        }
+
+        await new sql.Request(transaction)
+            .input("idPedido", sql.Int, pedido)
+            .query(
+                `UPDATE Pedidos
+                 SET estado = N'cancelado'
+                 WHERE id_pedido = @idPedido`
+            );
+
+        await transaction.commit();
+        return {
+            ok: true,
+            id_pedido: pedido,
+            estado: "cancelado",
+            message: "El pedido fue cancelado y el stock fue devuelto.",
+        };
+    } catch (e) {
+        await transaction.rollback();
+        throw e;
+    }
 }
 
 async function checkoutAbasto(sesionId, idAdmin) {
@@ -411,25 +617,20 @@ async function checkoutAbasto(sesionId, idAdmin) {
                 );
             }
 
-            // Calcular cantidad a agregar
-            const currentQty = chk.recordset && chk.recordset.length > 0 
-                ? Number(chk.recordset[0].cantidad) 
+            // Calcular cantidad a agregar — regla estricta: si la cantidad solicitada
+            // supera el espacio disponible hasta el tope, se rechaza toda la operación.
+            const currentQty = chk.recordset && chk.recordset.length > 0
+                ? Number(chk.recordset[0].cantidad)
                 : 0;
             const remaining = STOCK_CEILING - currentQty;
-            const appliedQty = remaining > 0 ? Math.min(qty, remaining) : 0;
-
-            if (appliedQty <= 0) {
-                warnings.push(
-                    `Producto #${idProd} ya llegó al máximo permitido (${STOCK_CEILING} uds.). No se agregó inventario adicional.`
-                );
-                continue;
-            }
-
-            if (appliedQty < qty) {
-                warnings.push(
-                    `Producto #${idProd}: solo se agregaron ${appliedQty} de ${qty} uds. porque el resto superaba el máximo permitido (${STOCK_CEILING} uds.).`
+            if (qty > remaining) {
+                throw new AppError(
+                    `No se pueden agregar más unidades: el stock máximo por producto es ${STOCK_CEILING} unidades.`,
+                    409,
+                    "ABASTO_STOCK_CAP"
                 );
             }
+            const appliedQty = qty; // aceptamos la cantidad completa cuando hay espacio
 
             // Actualizar Stock
             const req1 = new sql.Request(transaction);
@@ -718,6 +919,8 @@ module.exports = {
     eliminarLinea,
     vaciar,
     listarCarrito,
+    obtenerRemisionPedido,
+    cancelarPedido,
     checkoutCompra,
     checkoutAbasto,
 };

@@ -30,8 +30,10 @@ p.stock {
     border-radius: 0.5rem;
     background: var(--pvm-stock-bg);
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.45rem;
+    line-height: 1.2;
 }
 
 p.stock i {

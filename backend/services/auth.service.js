@@ -6,7 +6,12 @@ const { sql, getPool } = require("../config/database");
 const { AppError } = require("../utils/errors");
 const env = require("../config/env");
 
-async function login(email, password) {
+function rolEsperadoNormalizado(rol) {
+    var r = String(rol || "").trim().toLowerCase();
+    return r === "admin" || r === "cliente" ? r : "";
+}
+
+async function login(email, password, rolEsperado) {
     const e = String(email || "")
         .trim()
         .toLowerCase();
@@ -39,6 +44,16 @@ async function login(email, password) {
     }
 
     const rol = String(row.rol || "").toLowerCase();
+    const esperado = rolEsperadoNormalizado(rolEsperado);
+    if (esperado && rol !== esperado) {
+        throw new AppError(
+            esperado === "admin"
+                ? "Esta cuenta no es de administrador. Usa el acceso de cliente o entra con una cuenta admin."
+                : "Esta cuenta no es de cliente. Usa el acceso de administración o entra con una cuenta cliente.",
+            403,
+            "ROLE_MISMATCH"
+        );
+    }
     const token = jwt.sign(
         {
             sub: String(row.id_usuario),

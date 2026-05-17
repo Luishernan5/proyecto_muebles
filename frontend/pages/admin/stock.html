@@ -5,9 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario (admin) | Punto Venta Muebles</title>
     <link href="/vendor/bootstrap5/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+    <style>
+        .pvm-admin-topbar {
+            background: linear-gradient(90deg, #0f5132 0%, #198754 55%, #157347 100%);
+        }
+        .pvm-admin-topbar .nav-link,
+        .pvm-admin-topbar .navbar-brand {
+            color: #fff !important;
+        }
+    </style>
 </head>
-<body class="bg-light py-5">
-<div class="container" style="max-width: 520px">
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark pvm-admin-topbar shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="tienda.html"><i class="fa-solid fa-warehouse me-2"></i>PVM Abasto</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navAdminStock">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navAdminStock">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                <li class="nav-item"><a class="nav-link" href="tienda.html">Inicio abasto</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#">Ajuste por ID</a></li>
+                <li class="nav-item"><a class="nav-link" href="/index.html">Tienda cliente</a></li>
+                <li class="nav-item"><a class="nav-link" href="login.html">Cambiar usuario</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container py-5" style="max-width: 520px">
     <h1 class="h4 fw-bold mb-3">Ajuste rápido de stock</h1>
     <p class="text-muted small">Para reponer con el catálogo y carrito de abasto, abre <a href="tienda.html">Zona administración — Abasto</a>. La <a href="../../index.html">tienda pública</a> es solo para clientes. Aquí puedes sumar o restar por ID (positivo = entrada, negativo = salida). El inventario no puede quedar negativo ni superar el tope del servidor (STOCK_CEILING_PER_PRODUCT).</p>
     <div class="card shadow-sm border-0 mt-3">
@@ -25,7 +51,6 @@
                 <button type="submit" class="btn btn-success w-100">Aplicar</button>
             </form>
             <div class="d-flex gap-2 mt-3">
-                <a href="login.html" class="btn btn-outline-secondary btn-sm">Cambiar usuario</a>
                 <button type="button" class="btn btn-outline-danger btn-sm" id="btn-salir">Cerrar sesión</button>
                 <a href="../../index.html" class="btn btn-outline-secondary btn-sm ms-auto">Tienda</a>
             </div>

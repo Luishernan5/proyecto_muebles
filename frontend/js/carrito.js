@@ -172,6 +172,10 @@
     function mensajeErrorApi(err) {
         var c = err && err.code ? String(err.code) : "";
         var base = err && err.message ? String(err.message) : "Error desconocido";
+        // Preferir el mensaje enviado por el servidor cuando exista, y añadir el código.
+        if (base && base !== "Error desconocido") {
+            return c ? base + " (" + c + ")" : base;
+        }
         if (c && MSJ_CODIGO_API[c]) {
             return MSJ_CODIGO_API[c] + " (" + c + ")";
         }
@@ -190,11 +194,515 @@
         return base;
     }
 
+    function stockCeiling() {
+        var n = parseInt(window.PVM_STOCK_CEILING, 10);
+        if (!isNaN(n) && n > 0) {
+            return n;
+        }
+        return 50;
+    }
+
+    function encontrarElementoProducto(idProducto) {
+        var selector = '[onclick*="agregarCarrito(' + idProducto + ')"]';
+        var trigger = document.querySelector(selector);
+        if (!trigger) {
+            return null;
+        }
+        var node = trigger;
+        for (var i = 0; i < 8 && node; i++) {
+            if (
+                node.classList &&
+                (node.classList.contains("producto-card") ||
+                    node.classList.contains("modal-content") ||
+                    node.classList.contains("card"))
+            ) {
+                return node;
+            }
+            node = node.parentElement;
+        }
+        return trigger;
+    }
+
+    function stockVisibleDeProducto(idProducto) {
+        var el = encontrarElementoProducto(idProducto);
+        if (!el) {
+            return null;
+        }
+        var pStock = el.querySelector("p.stock");
+        if (!pStock) {
+            return null;
+        }
+        var total = parseInt(pStock.getAttribute("data-pvm-stock-n"), 10);
+        var disponible = parseInt(pStock.getAttribute("data-pvm-stock-disponible"), 10);
+        if (Number.isNaN(total)) {
+            total = null;
+        }
+        if (Number.isNaN(disponible)) {
+            disponible = null;
+        }
+        return {
+            total: total,
+            disponible: disponible,
+        };
+    }
+
+    function stockMin() {
+        var n = parseInt(window.PVM_STOCK_MIN, 10);
+        if (!isNaN(n) && n >= 0) {
+            return n;
+        }
+        return 1;
+    }
+
+    function validarAbastoAntesDeEnviar(items) {
+        if (!esModoAbasto() || !Array.isArray(items) || !items.length) {
+            return null;
+        }
+        var ceiling = stockCeiling();
+        for (var i = 0; i < items.length; i++) {
+            var line = items[i] || {};
+            var stock = parseInt(line.stock, 10);
+            var cantidad = parseInt(line.cantidad, 10);
+            if (isNaN(stock) || isNaN(cantidad)) {
+                continue;
+            }
+            if (stock + cantidad > ceiling) {
+                return {
+                    ok: false,
+                    title: "No se pudo registrar el abasto",
+                    message:
+                        "No se pueden agregar más unidades: el stock máximo por producto es " +
+                        ceiling +
+                        " unidades.",
+                };
+            }
+        }
+        return null;
+    }
+
+    function validarCompraClienteAntesDeEnviar(items) {
+        if (esModoAbasto() || !Array.isArray(items) || !items.length) {
+            return null;
+        }
+        for (var i = 0; i < items.length; i++) {
+            var line = items[i] || {};
+            var stock = parseInt(line.stock, 10);
+            var cantidad = parseInt(line.cantidad, 10);
+            var nombre = String(line.nombre || "producto");
+            if (isNaN(stock) || isNaN(cantidad)) {
+                continue;
+            }
+            if (cantidad >= stock) {
+                return {
+                    title: "No se pudo finalizar la compra",
+                    message:
+                        "No se pudo completar la venta: \"" +
+                        nombre +
+                        "\" debe dejar al menos 1 unidad en inventario. Solo hay " +
+                        stock +
+                        " unidad(es) en total.",
+                };
+            }
+        }
+        return null;
+    }
+
     function formatoPrecio(n) {
         return Number(n).toLocaleString("es-MX", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         });
+    }
+
+    function normalizarWhatsAppNumero(raw) {
+        return String(raw || "").replace(/\D+/g, "");
+    }
+
+    function construirNotaRemision(items, dataCarrito, dataRespuesta) {
+        var lines = [];
+        var fecha = new Date();
+        var folio = dataRespuesta && dataRespuesta.id_pedido != null ? String(dataRespuesta.id_pedido) : "PENDIENTE";
+        var subtotal = dataCarrito && dataCarrito.subtotal != null ? Number(dataCarrito.subtotal) : 0;
+        var iva = dataCarrito && dataCarrito.iva != null ? Number(dataCarrito.iva) : Math.round(subtotal * 0.16 * 100) / 100;
+        var total = dataCarrito && dataCarrito.total != null ? Number(dataCarrito.total) : Math.round((subtotal + iva) * 100) / 100;
+
+        lines.push("Punto Venta Muebles");
+        lines.push("Nota de remisión");
+        lines.push("Folio: " + folio);
+        lines.push("Fecha: " + fecha.toLocaleString("es-MX"));
+        lines.push("");
+
+        (Array.isArray(items) ? items : []).forEach(function (linea) {
+            var nombre = String(linea.nombre || "Producto");
+            var cantidad = Number(linea.cantidad || 0);
+            var precio = Number(linea.precio || 0);
+            var importe = Math.round((cantidad * precio) * 100) / 100;
+            lines.push("- " + nombre + " x" + cantidad + " = $" + formatoPrecio(importe) + " MXN");
+        });
+
+        lines.push("");
+        lines.push("Subtotal: $" + formatoPrecio(subtotal) + " MXN");
+        lines.push("IVA (16%): $" + formatoPrecio(iva) + " MXN");
+        lines.push("Total a pagar: $" + formatoPrecio(total) + " MXN");
+        lines.push("");
+        lines.push("Gracias por tu compra.");
+
+        return {
+            texto: lines.join("\n"),
+            subtotal: subtotal,
+            iva: iva,
+            total: total,
+            folio: folio,
+        };
+    }
+
+    function normalizarTelefonoWhatsAppInput(raw) {
+        var base = String(raw || "").replace(/\D+/g, "");
+        if (!base) {
+            return "";
+        }
+        if (base.length === 10) {
+            return "52" + base;
+        }
+        if (base.length >= 11 && base.length <= 15) {
+            return base;
+        }
+        return "";
+    }
+
+    var pvmPublicConfigPromise = null;
+
+    function obtenerConfigPublica() {
+        if (pvmPublicConfigPromise) {
+            return pvmPublicConfigPromise;
+        }
+        pvmPublicConfigPromise = request("/auth/public-config", { method: "GET" })
+            .then(function (resp) {
+                return resp && resp.data ? resp.data : {};
+            })
+            .catch(function () {
+                return {};
+            });
+        return pvmPublicConfigPromise;
+    }
+
+    async function enviarRemisionPorWhatsApp(idPedido, telefono) {
+        var numero = normalizarTelefonoWhatsAppInput(telefono);
+        var payload = {};
+        if (numero) {
+            payload.telefono = numero;
+        }
+        return request("/carrito/remision/" + idPedido + "/whatsapp", {
+            method: "POST",
+            body: JSON.stringify(payload),
+        });
+    }
+
+    async function obtenerPdfRemisionBlob(idPedido) {
+        var resp = await fetch(apiRoot() + "/carrito/remision/" + idPedido + "/pdf", {
+            method: "GET",
+            headers: {
+                "X-Session-Id": getSessionId(),
+            },
+        });
+        if (!resp.ok) {
+            var txt = await resp.text();
+            throw new Error(txt || "No se pudo generar la nota de remisión.");
+        }
+        return resp.blob();
+    }
+
+    async function compartirRemisionDesdeNavegador(idPedido, telefono, notaTexto) {
+        var blob = await obtenerPdfRemisionBlob(idPedido);
+        var archivo = new File([blob], "nota-remision-" + idPedido + ".pdf", {
+            type: "application/pdf",
+        });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [archivo] })) {
+            await navigator.share({
+                title: "Nota de remisión #" + idPedido,
+                text:
+                    "Nota de remisión en PDF" +
+                    (telefono ? " para " + telefono : "") +
+                    ".\n\n" +
+                    (notaTexto || ""),
+                files: [archivo],
+            });
+            return true;
+        }
+
+        var telefonoNorm = normalizarTelefonoWhatsAppInput(telefono);
+        var shareText = encodeURIComponent(
+            (notaTexto || "") +
+                "\n\nNo fue posible enviar el archivo automáticamente desde este navegador. " +
+                "Abre la nota de remisión desde el enlace y compártela por WhatsApp."
+        );
+        var pdfUrl = apiRoot() + "/carrito/remision/" + idPedido + "/pdf";
+        var waFallback = telefonoNorm
+            ? "https://wa.me/" + telefonoNorm + "?text=" + shareText + "%0A%0A" + encodeURIComponent(pdfUrl)
+            : "https://api.whatsapp.com/send?text=" + shareText + "%0A%0A" + encodeURIComponent(pdfUrl);
+
+        window.open(waFallback, "_blank", "noopener,noreferrer");
+        return false;
+    }
+
+    async function pedirEmailYEnviarRemision(idPedido) {
+        const { value: email, dismiss } = await Swal.fire({
+            icon: 'question',
+            title: 'Enviar nota de remisión',
+            input: 'email',
+            inputPlaceholder: 'tu@correo.com',
+            inputLabel: 'Ingresa tu correo para recibir la nota de remisión',
+            showCancelButton: true,
+            confirmButtonText: 'Enviar',
+            confirmButtonColor: '#25d366',
+            cancelButtonText: 'Cancelar',
+            inputValidator: function (value) {
+                if (!value) return 'Por favor ingresa un correo válido';
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    return 'Por favor ingresa un correo válido';
+                }
+            },
+        });
+
+        if (dismiss) {
+            if (dismiss === Swal.DismissReason.cancel) {
+                const confirmacion = await Swal.fire({
+                    icon: 'warning',
+                    title: '¿Cancelar la compra?',
+                    text: 'Si continúas, el pedido se anulará y el stock se devolverá al inventario.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, cancelar compra',
+                    cancelButtonText: 'No, mantener compra',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                });
+
+                if (confirmacion.isConfirmed) {
+                    await cancelarCompraYRestaurarStock(idPedido);
+                }
+            }
+            return;
+        }
+        if (!email) return;
+
+        try {
+            toastSwal({
+                icon: 'info',
+                title: 'Enviando...',
+                text: 'Un momento, estamos enviando tu nota de remisión',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+            });
+
+            const response = await fetch(apiRoot() + '/carrito/remision/' + idPedido + '/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Id': getSessionId(),
+                },
+                body: JSON.stringify({ email: email }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw { code: response.status, message: err.message || 'Error desconocido' };
+            }
+
+            toastSwal({
+                icon: 'success',
+                title: '¡Enviado!',
+                text: 'La nota de remisión fue enviada a ' + email + '. Por favor revisa tu bandeja de entrada.',
+                confirmButtonColor: '#c9a227',
+            });
+        } catch (err) {
+            toastSwal({
+                icon: 'error',
+                title: 'No se pudo enviar',
+                text: mensajeErrorApi(err),
+                confirmButtonColor: '#c9a227',
+            });
+        }
+    }
+
+    async function cancelarCompraYRestaurarStock(idPedido) {
+        try {
+            toastSwal({
+                icon: 'info',
+                title: 'Cancelando compra...',
+                text: 'Restaurando el stock del pedido.',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+            });
+
+            const cancelUrl = apiRoot() + '/carrito/remision/' + idPedido + '/cancelar';
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const timeoutId = controller
+                ? setTimeout(function () {
+                    try {
+                        controller.abort();
+                    } catch (e) {
+                        /* ignore */
+                    }
+                }, 15000)
+                : null;
+
+            const response = await fetch(cancelUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Id': getSessionId(),
+                },
+                body: '{}',
+                signal: controller ? controller.signal : undefined,
+            }).finally(function () {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+            });
+
+            const payload = await response.json().catch(function () {
+                return {};
+            });
+
+            if (!response.ok || !payload.ok) {
+                throw {
+                    code: response.status,
+                    message: (payload && payload.error && payload.error.message) || 'No se pudo cancelar la compra',
+                };
+            }
+
+            try {
+                if (typeof Swal !== 'undefined' && Swal.close) {
+                    Swal.close();
+                }
+            } catch (e) {
+                /* ignore */
+            }
+
+            toastSwal({
+                icon: 'success',
+                title: 'Compra cancelada',
+                text: 'El pedido fue anulado y el stock regresó al inventario.',
+                confirmButtonColor: '#c9a227',
+            });
+        } catch (err) {
+            try {
+                if (typeof Swal !== 'undefined' && Swal.close) {
+                    Swal.close();
+                }
+            } catch (e) {
+                /* ignore */
+            }
+            toastSwal({
+                icon: 'error',
+                title: 'No se pudo cancelar',
+                text: mensajeErrorApi(err),
+                confirmButtonColor: '#c9a227',
+            });
+        }
+    }
+
+    async function enviarRemisionSinPrompt(idPedido) {
+        try {
+            toastSwal({
+                icon: "info",
+                title: "Enviando remisión",
+                text: "Por favor espera...",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+            });
+
+            await enviarRemisionPorWhatsApp(idPedido, "");
+            toastSwal({
+                icon: "success",
+                title: "Remisión enviada",
+                text: "La nota de remisión fue enviada por WhatsApp.",
+                confirmButtonColor: "#c9a227",
+            });
+        } catch (err) {
+            toastSwal({
+                icon: "error",
+                title: "No se pudo enviar",
+                text: mensajeErrorApi(err),
+                confirmButtonColor: "#c9a227",
+            });
+        }
+    }
+
+    function pedirTelefonoParaRemision(idPedido) {
+        if (typeof Swal === "undefined") {
+            return Promise.resolve();
+        }
+
+        return obtenerConfigPublica().then(function (cfg) {
+            if (cfg && cfg.whatsappDefaultRecipientFixed) {
+                return enviarRemisionSinPrompt(idPedido);
+            }
+
+            return Swal.fire({
+            icon: "question",
+            title: "Enviar nota por WhatsApp",
+            html:
+                '<div style="text-align:left">' +
+                '<p class="mb-2">Escribe el número de teléfono con lada al que se enviará la nota de remisión en PDF.</p>' +
+                '<p class="small text-muted mb-0">Si escribes 10 dígitos, se asumirá México automáticamente.</p>' +
+                '</div>',
+            input: "tel",
+            inputPlaceholder: "5215512345678",
+            inputAttributes: {
+                inputmode: "tel",
+                autocomplete: "tel",
+                maxlength: "15",
+            },
+            showCancelButton: true,
+            confirmButtonText: "Enviar",
+            cancelButtonText: "Cancelar",
+            confirmButtonColor: "#25d366",
+            cancelButtonColor: "#6c757d",
+            allowOutsideClick: false,
+            inputValidator: function (value) {
+                if (!normalizarTelefonoWhatsAppInput(value)) {
+                    return "Ingresa un número válido con lada.";
+                }
+                return null;
+            },
+        }).then(async function (result) {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            var telefono = normalizarTelefonoWhatsAppInput(result.value);
+            return enviarRemisionConConfirmacion(idPedido, telefono);
+        });
+        });
+    }
+
+    async function enviarRemisionConConfirmacion(idPedido, telefono) {
+        try {
+            toastSwal({
+                icon: "info",
+                title: "Enviando remisión",
+                text: "Por favor espera...",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+            });
+
+            await enviarRemisionPorWhatsApp(idPedido, telefono);
+            toastSwal({
+                icon: "success",
+                title: "Remisión enviada",
+                text: "La nota de remisión fue enviada por WhatsApp.",
+                confirmButtonColor: "#c9a227",
+            });
+        } catch (err) {
+            toastSwal({
+                icon: "error",
+                title: "No se pudo enviar",
+                text: mensajeErrorApi(err),
+                confirmButtonColor: "#c9a227",
+            });
+        }
     }
 
     function escapeHtml(s) {
@@ -306,21 +814,143 @@
         if (typeof Swal === "undefined") {
             return;
         }
+
+        // Asegurarnos de que cualquier loader previo de Swal esté oculto antes
+        // de abrir una nueva alerta. Evita que quede el spinner activo.
+        try {
+            if (typeof Swal.hideLoading === "function") {
+                Swal.hideLoading();
+            }
+        } catch (e) {
+            /* ignore */
+        }
+
         prepararFocoParaSwal();
 
         var cfg = Object.assign({}, opts || {});
+        var debugSwal = Boolean(window.PVM_DEBUG_SWAL);
+
+        function openSwalNow() {
+            try {
+                if (typeof Swal.close === "function") {
+                    Swal.close();
+                }
+            } catch (e) {
+                /* ignore */
+            }
+            try {
+                if (typeof Swal.hideLoading === "function") {
+                    Swal.hideLoading();
+                }
+            } catch (e) {
+                /* ignore */
+            }
+
+            console.debug("toastSwal: opening Swal now (cleanup previous) ", cfg && cfg.title);
+
+            // aggressive cleanup of any leftover loaders / attributes
+            try {
+                document.querySelectorAll('.swal2-loader').forEach(function (n) {
+                    if (n && n.parentNode) {
+                        n.parentNode.removeChild(n);
+                    }
+                });
+            } catch (e) {
+                /* ignore */
+            }
+            try {
+                document.querySelectorAll('.swal2-popup').forEach(function (p) {
+                    try {
+                        p.removeAttribute && p.removeAttribute('data-loading');
+                        p.removeAttribute && p.removeAttribute('aria-busy');
+                        var btns = p.querySelectorAll && p.querySelectorAll('button');
+                        if (btns && btns.forEach) {
+                            btns.forEach(function (b) {
+                                try {
+                                    b.disabled = false;
+                                } catch (e2) {}
+                            });
+                        }
+                        var loader = p.querySelector && p.querySelector('.swal2-loader');
+                        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+                    } catch (e3) {
+                        /* ignore */
+                    }
+                });
+            } catch (e) {
+                /* ignore */
+            }
+
+            // remove empty containers left behind
+            try {
+                document.querySelectorAll('.swal2-container').forEach(function (c) {
+                    try {
+                        if (!c.querySelector('.swal2-popup') && c.parentNode) {
+                            c.parentNode.removeChild(c);
+                        }
+                    } catch (e4) {
+                        /* ignore */
+                    }
+                });
+            } catch (e) {
+                /* ignore */
+            }
+
+            return new Promise(function (resolve) {
+                var maxWait = 500;
+                var waited = 0;
+                var interval = 40;
+
+                var checkGone = function () {
+                    // SweetAlert2 uses .swal2-container and .swal2-popup
+                    var existing = document.querySelector('.swal2-container') || document.querySelector('.swal2-popup');
+                    if (!existing) {
+                        // small extra delay to ensure cleanup
+                        return setTimeout(function () {
+                            try {
+                                var p = Swal.fire(cfg);
+                                resolve(p);
+                            } catch (e) {
+                                resolve(Promise.reject(e));
+                            }
+                        }, 40);
+                    }
+                    waited += interval;
+                    if (waited >= maxWait) {
+                        // give up waiting and open anyway
+                        try {
+                            var p2 = Swal.fire(cfg);
+                            resolve(p2);
+                        } catch (e2) {
+                            resolve(Promise.reject(e2));
+                        }
+                        return;
+                    }
+                    setTimeout(checkGone, interval);
+                };
+
+                // Start checking after forcing close/hide above
+                setTimeout(checkGone, 20);
+            });
+        }
         var prevWillOpen = cfg.willOpen;
         var prevDidOpen = cfg.didOpen;
         var prevDidClose = cfg.didClose;
 
         cfg.returnFocus = false;
         cfg.willOpen = function (popup) {
+            if (debugSwal) console.debug("toastSwal: willOpen", cfg && cfg.title);
             prepararFocoParaSwal();
             if (typeof prevWillOpen === "function") {
-                prevWillOpen(popup);
+                try {
+                    prevWillOpen(popup);
+                } catch (e) {
+                    if (debugSwal) console.error("toastSwal: prevWillOpen threw", e);
+                }
             }
         };
         cfg.didOpen = function (popup) {
+            if (debugSwal) console.debug("toastSwal: didOpen", cfg && cfg.title);
             if (typeof Swal.getConfirmButton === "function") {
                 var btn = Swal.getConfirmButton();
                 if (!tryFocus(btn) && popup) {
@@ -328,17 +958,57 @@
                 }
             }
             if (typeof prevDidOpen === "function") {
-                prevDidOpen(popup);
+                try {
+                    prevDidOpen(popup);
+                } catch (e) {
+                    if (debugSwal) console.error("toastSwal: prevDidOpen threw", e);
+                }
             }
         };
         cfg.didClose = function (popup) {
+            if (debugSwal) console.debug("toastSwal: didClose", cfg && cfg.title);
             restaurarFocoTrasSwal();
             if (typeof prevDidClose === "function") {
-                prevDidClose(popup);
+                try {
+                    prevDidClose(popup);
+                } catch (e) {
+                    if (debugSwal) console.error("toastSwal: prevDidClose threw", e);
+                }
             }
         };
 
-        return Swal.fire(cfg);
+        var canvas = document.getElementById("carritoCanvas");
+        var canvasAbierto =
+            canvas &&
+            canvas.classList &&
+            canvas.classList.contains("show");
+
+        if (!canvasAbierto) {
+            return openSwalNow();
+        }
+
+        return new Promise(function (resolve) {
+            var ejecutado = false;
+            var abrir = function () {
+                if (ejecutado) {
+                    return;
+                }
+                ejecutado = true;
+                if (debugSwal) console.debug("toastSwal: deferred abrir() running", cfg && cfg.title);
+                openSwalNow().then(function (p) {
+                    resolve(p);
+                });
+            };
+
+            try {
+                canvas.addEventListener("hidden.bs.offcanvas", abrir, { once: true });
+            } catch (e0) {
+                /* ignore */
+            }
+
+            cerrarCarritoControlado();
+            setTimeout(abrir, 500);
+        });
     }
 
     function mostrarAdvertencias(warnings) {
@@ -419,6 +1089,20 @@
                     body = text ? JSON.parse(text) : {};
                 } catch (e) {
                     body = { raw: text };
+                }
+                if (body && body.ok === false) {
+                    var msgOkFalse =
+                        (body.error && body.error.message) ||
+                        "La operación no pudo completarse.";
+                    var errOkFalse = new Error(msgOkFalse);
+                    errOkFalse.status = res.status;
+                    errOkFalse.body = body;
+                    errOkFalse.meta = body.error && body.error.meta ? body.error.meta : null;
+                    errOkFalse.code =
+                        body.error && body.error.code
+                            ? String(body.error.code)
+                            : undefined;
+                    throw errOkFalse;
                 }
                 if (!res.ok) {
                     var msg =
@@ -558,9 +1242,9 @@
                             ? "Máx. por línea (abasto): "
                             : "Máx. en carrito: ";
                         return (
-                            '<div class="card border-0 shadow-sm mb-3 cart-line" data-id-carrito="' +
-                            idC +
-                            '">' +
+                                    '<div class="card border-0 shadow-sm mb-3 cart-line" data-id-carrito="' +
+                                    idC +
+                                    '" data-stock="' + L.stock + '" data-reservado="' + L.reservado + '" data-disponible="' + (L.disponible_global) + '" data-cantidad="' + L.cantidad + '" data-max-en-carrito="' + maxC + '">' +
                             '<div class="card-body p-3">' +
                             '<div class="d-flex gap-3 align-items-center">' +
                             imgBlock +
@@ -624,6 +1308,36 @@
         return false;
     }
 
+    function stockDisponibleEnCarrito(idCarrito) {
+        var el = document.querySelector('[data-id-carrito="' + idCarrito + '"]');
+        if (!el) {
+            return null;
+        }
+        var actual = parseInt(el.getAttribute("data-cantidad"), 10);
+        var stock = parseInt(el.getAttribute("data-stock"), 10);
+        var reservado = parseInt(el.getAttribute("data-reservado"), 10);
+        var disponible_global = parseInt(el.getAttribute("data-disponible"), 10);
+        var maxEnLinea = parseInt(el.getAttribute("data-max-en-carrito"), 10);
+
+        if (Number.isNaN(actual) || Number.isNaN(stock) || Number.isNaN(reservado)) {
+            return null;
+        }
+
+        if (esModoAbasto()) {
+            if (Number.isNaN(maxEnLinea)) {
+                maxEnLinea = stockCeiling();
+            }
+            return Math.max(0, maxEnLinea - actual);
+        }
+
+        // Para clientes: seguir la misma regla que el backend (maxPermitidoSesion):
+        // permitido = stock - (reservado - cantidadActualLinea) - STOCK_MIN
+        var minStock = stockMin();
+        var permitido = stock - (reservado - actual) - minStock;
+        if (Number.isNaN(permitido)) return null;
+        return Math.max(0, permitido);
+    }
+
     /**
      * @param {number|string} idProducto
      * @param {number} [cantidad]
@@ -645,6 +1359,42 @@
             qty = 1;
         }
 
+        var stockInfo = stockVisibleDeProducto(id);
+        if (stockInfo) {
+            if (esModoAbasto()) {
+                var actual = stockInfo.total != null ? stockInfo.total : null;
+                if (actual != null && actual + qty > stockCeiling()) {
+                    toastSwal({
+                        icon: "warning",
+                        title: "Tope de inventario",
+                        text:
+                            "No se pueden agregar más unidades: el stock máximo por producto es " +
+                            stockCeiling() +
+                            " unidades.",
+                        confirmButtonColor: "#c9a227",
+                    });
+                    return;
+                }
+            } else {
+                var disponible =
+                    stockInfo.disponible != null
+                        ? stockInfo.disponible
+                        : stockInfo.total;
+                if (disponible != null && qty > disponible) {
+                    toastSwal({
+                        icon: "warning",
+                        title: "Stock insuficiente",
+                        text:
+                            "Solo hay " +
+                            disponible +
+                            " unidad(es) disponibles para este producto.",
+                        confirmButtonColor: "#c9a227",
+                    });
+                    return;
+                }
+            }
+        }
+
         request("/carrito/items", {
             method: "POST",
             body: JSON.stringify({
@@ -653,14 +1403,26 @@
             }),
         })
             .then(function (resp) {
-                if (resp.data && resp.data.warnings && resp.data.warnings.length) {
-                    mostrarAdvertencias(resp.data.warnings);
+                var warnings =
+                    resp && resp.data && Array.isArray(resp.data.warnings)
+                        ? resp.data.warnings
+                        : [];
+                // Si el servidor devuelve warnings en un 200, mostrar advertencia.
+                if (warnings.length) {
+                    toastSwal({
+                        icon: "warning",
+                        title: "Aviso de inventario",
+                        text: warnings[0],
+                        confirmButtonColor: "#c9a227",
+                    });
+                    actualizarCarrito();
+                    return;
                 }
+
+                // Respuesta exitosa sin warnings: indicar éxito y refrescar carrito.
                 toastSwal({
                     icon: "success",
-                    title: esModoAbasto()
-                        ? "Línea de abasto agregada"
-                        : "Producto agregado",
+                    title: esModoAbasto() ? "Línea de abasto agregada" : "Producto agregado",
                     timer: 1200,
                     showConfirmButton: false,
                 });
@@ -668,7 +1430,7 @@
             })
             .catch(function (err) {
                 var code = err.code ? String(err.code) : "";
-                var isMaxLinea = code === "MAX_LINEA" || code === "MAX_QUANTITY_EXCEEDED";
+                var isMaxLinea = code === "MAX_LINEA" || code === "MAX_QUANTITY_EXCEEDED" || code === "ABASTO_STOCK_CAP";
                 var isInsuffStock = code === "INSUFFICIENT_STOCK";
                 var icon = isMaxLinea || isInsuffStock ? "warning" : "error";
                 var title = isMaxLinea
@@ -677,16 +1439,19 @@
                     ? "Stock insuficiente"
                     : "No se pudo agregar";
                 var message = isMaxLinea
-                    ? "No puedes agregar más unidades de este producto. El máximo permitido es 30 unidades por línea."
+                    ? (err.message || "No puedes agregar más unidades de este producto. Ya alcanzaste el máximo permitido por el sistema.")
                     : isInsuffStock
-                    ? "No hay suficiente stock disponible para esa cantidad."
+                    ? (err.message || "No hay suficiente stock disponible para esa cantidad.")
                     : mensajeErrorApi(err);
+                // Mostrar única advertencia/err del servidor (no éxitos parciales)
                 toastSwal({
                     icon: icon,
                     title: title,
                     text: message,
                     confirmButtonColor: "#c9a227",
                 });
+                // Refrescar carrito para asegurar estado consistente (sin cambios aplicados si hubo error)
+                actualizarCarrito();
             });
     };
 
@@ -722,9 +1487,17 @@
             return;
         }
         var line = document.querySelector('[data-id-carrito="' + id + '"]');
-        var text = line ? line.textContent : "";
-        var m = text.match(/×\s*(\d+)/);
-        var actual = m ? parseInt(m[1], 10) : 1;
+        var actual = null;
+        if (line) {
+            var ac = parseInt(line.getAttribute('data-cantidad'), 10);
+            actual = Number.isNaN(ac) ? null : ac;
+        }
+        if (actual == null) {
+            // Fallback to previous regex parsing if data attribute missing
+            var text = line ? line.textContent : "";
+            var m = text.match(/×\s*(\d+)/);
+            actual = m ? parseInt(m[1], 10) : 1;
+        }
         var nueva = actual + d;
         if (nueva < 1) {
             toastSwal({
@@ -739,20 +1512,81 @@
         establecerCantidadLinea(id, nueva);
     };
 
+    // Evitar peticiones concurrentes por línea de carrito
+    var _pvm_inflight = {};
+
     window.establecerCantidadLinea = function (idCarrito, cantidad) {
         var id = parseInt(idCarrito, 10);
         var c = parseInt(cantidad, 10);
         if (isNaN(id) || isNaN(c) || c < 1) {
             return;
         }
+        // Evitar peticiones concurrentes para la misma línea
+        if (_pvm_inflight[id]) return;
+
+        var disponible = stockDisponibleEnCarrito(id);
+        if (disponible != null) {
+            var el = document.querySelector('[data-id-carrito="' + id + '"]');
+            var actualLocal = el ? parseInt(el.getAttribute("data-cantidad"), 10) : null;
+            if (Number.isNaN(actualLocal)) {
+                actualLocal = null;
+            }
+            // disponible representa unidades adicionales que se pueden añadir
+            // Si conocemos el actual, calculamos el máximo absoluto permitido
+            if (actualLocal != null) {
+                var maxAbs = actualLocal + Number(disponible);
+                if (c > maxAbs) {
+                    // Si estamos en modo abasto (admin), informar explícitamente del tope de inventario.
+                    if (esModoAbasto()) {
+                        toastSwal({
+                            icon: "warning",
+                            title: "Tope de inventario",
+                            text: "No se pueden agregar más unidades: el stock máximo por producto es " + stockCeiling() + " unidades.",
+                            confirmButtonColor: "#c9a227",
+                        });
+                        return;
+                    }
+                    // Para clientes, clamp silenciosamente.
+                    c = maxAbs;
+                }
+                if (c === actualLocal) {
+                    // nada que hacer
+                    return;
+                }
+            } else {
+                // Si no conocemos el actual localmente, y la petición solicita más de lo disponible,
+                // clamp a disponible (en caso de que el backend espere cantidad absoluta)
+                if (c > Number(disponible)) {
+                    c = Number(disponible);
+                }
+            }
+        }
+        // Deshabilitar controles en la línea mientras la petición está en curso
+        var lineEl = document.querySelector('[data-id-carrito="' + id + '"]');
+        if (lineEl) {
+            _pvm_inflight[id] = true;
+            var buttons = lineEl.querySelectorAll('button');
+            buttons.forEach(function (b) {
+                try { b.disabled = true; } catch (e) { /* ignore */ }
+            });
+        }
+
         request("/carrito/items/" + id, {
             method: "PATCH",
             body: JSON.stringify({ cantidad: c }),
         })
             .then(function () {
                 actualizarCarrito();
+                if (lineEl) {
+                    delete _pvm_inflight[id];
+                    var buttons2 = lineEl.querySelectorAll('button');
+                    buttons2.forEach(function (b) {
+                        try { b.disabled = false; } catch (e) { /* ignore */ }
+                    });
+                }
             })
             .catch(function (err) {
+                // Error recibido del servidor al actualizar cantidad
                 toastSwal({
                     icon: "warning",
                     title: "No se pudo actualizar",
@@ -760,6 +1594,13 @@
                     confirmButtonColor: "#c9a227",
                 });
                 actualizarCarrito();
+                if (lineEl) {
+                    delete _pvm_inflight[id];
+                    var buttons3 = lineEl.querySelectorAll('button');
+                    buttons3.forEach(function (b) {
+                        try { b.disabled = false; } catch (e) { /* ignore */ }
+                    });
+                }
             });
     };
 
@@ -804,17 +1645,36 @@
                     });
                     return;
                 }
+
+                var avisoAbasto = validarAbastoAntesDeEnviar(items);
+                if (avisoAbasto) {
+                    toastSwal({
+                        icon: "warning",
+                        title: avisoAbasto.title,
+                        text: avisoAbasto.message,
+                        confirmButtonColor: "#c9a227",
+                    });
+                    return;
+                }
+
+                var avisoCompra = validarCompraClienteAntesDeEnviar(items);
+                if (avisoCompra) {
+                    toastSwal({
+                        icon: "warning",
+                        title: avisoCompra.title,
+                        text: avisoCompra.message,
+                        confirmButtonColor: "#c9a227",
+                    });
+                    return;
+                }
                 
+                // Mostrar indicador de procesamiento SIN usar showLoading (evita estados atascados).
                 toastSwal({
                     icon: "info",
                     title: "Procesando",
                     text: esModoAbasto() ? "Registrando entrada a inventario..." : "Finalizando compra...",
                     allowOutsideClick: false,
-                    didOpen: function () {
-                        if (typeof Swal !== "undefined" && typeof Swal.showLoading === "function") {
-                            Swal.showLoading();
-                        }
-                    }
+                    showConfirmButton: false
                 });
 
                 var resp = await request(path, { method: "POST", body: "{}" });
@@ -831,6 +1691,15 @@
                 } else {
                     titulo = "Compra realizada";
                 }
+                try {
+                    if (typeof Swal !== "undefined") {
+                        try { Swal.hideLoading && Swal.hideLoading(); } catch (e) {}
+                        try { Swal.close && Swal.close(); } catch (e) {}
+                    }
+                } catch (e) {
+                    /* ignore */
+                }
+
                 toastSwal({
                     icon: warnings.length ? "warning" : "success",
                     title: titulo,
@@ -838,12 +1707,13 @@
                     confirmButtonColor: "#c9a227",
                     allowOutsideClick: true,
                     didClose: function () {
-                        if (warnings.length) {
-                            mostrarAdvertencias(warnings);
-                        }
                         actualizarCarrito();
                         if (esModoAbasto()) {
                             emitirStockRefresh();
+                        } else if (d.id_pedido) {
+                            setTimeout(function () {
+                                pedirEmailYEnviarRemision(d.id_pedido);
+                            }, 120);
                         }
                     }
                 });
@@ -889,13 +1759,9 @@
                     baseMsg = baseMsg || "Datos inválidos. Verifica que el carrito sea válido.";
                 }
 
-                console.error("Error en finalizarCompra:", {
-                    status: st,
-                    code: code,
-                    message: err.message || "Sin mensaje",
-                    meta: meta || null,
-                    body: err.body || {}
-                });
+                var meta = err.meta || null;
+                // No mostrar objetos de error detallados en consola para el usuario final.
+                // Guardamos información mínima si se desea habilitar logging remoto.
 
                 if (meta && typeof meta === "object") {
                     var detalles = [];
@@ -942,6 +1808,15 @@
             return;
         }
 
+        var activo = document.activeElement;
+        if (activo && canvas.contains(activo) && typeof activo.blur === "function") {
+            try {
+                activo.blur();
+            } catch (e0) {
+                /* ignore */
+            }
+        }
+
         var ae = document.activeElement;
         if (
             !ae ||
@@ -958,6 +1833,7 @@
             document.querySelector(
                 '[data-bs-toggle="offcanvas"][data-bs-target="#carritoCanvas"]'
             ),
+            ensureModalFocusSentinel(),
             document.querySelector("[data-bs-toggle='collapse']"),
             document.body
         ];
@@ -969,16 +1845,8 @@
                 !canvas.contains(target) &&
                 typeof target.focus === "function"
             ) {
-                try {
-                    target.focus({ preventScroll: true });
+                if (tryFocus(target)) {
                     return;
-                } catch (e1) {
-                    try {
-                        target.focus();
-                        return;
-                    } catch (e2) {
-                        /* ignore */
-                    }
                 }
             }
         }
@@ -995,6 +1863,45 @@
 
     var pvmCarritoHideFocusInstalled = false;
     var pvmCarritoLastFocus = null;
+    var pvmCarritoPreCloseInstalled = false;
+
+    function congelarFocusablesCanvas(canvas) {
+        if (!canvas || typeof canvas.querySelectorAll !== "function") {
+            return;
+        }
+        var focusables = canvas.querySelectorAll(
+            'a, button, input, select, textarea, [tabindex]'
+        );
+        focusables.forEach(function (el) {
+            if (!el || typeof el.setAttribute !== "function") {
+                return;
+            }
+            if (!el.hasAttribute("data-pvm-prev-tabindex")) {
+                var prev = el.getAttribute("tabindex");
+                el.setAttribute(
+                    "data-pvm-prev-tabindex",
+                    prev == null ? "__none__" : String(prev)
+                );
+            }
+            el.setAttribute("tabindex", "-1");
+        });
+    }
+
+    function restaurarFocusablesCanvas(canvas) {
+        if (!canvas || typeof canvas.querySelectorAll !== "function") {
+            return;
+        }
+        var conEstado = canvas.querySelectorAll("[data-pvm-prev-tabindex]");
+        conEstado.forEach(function (el) {
+            var prev = el.getAttribute("data-pvm-prev-tabindex");
+            if (prev === "__none__") {
+                el.removeAttribute("tabindex");
+            } else {
+                el.setAttribute("tabindex", prev || "-1");
+            }
+            el.removeAttribute("data-pvm-prev-tabindex");
+        });
+    }
 
     function getSafeFocusTarget(canvas) {
         if (pvmCarritoLastFocus && typeof pvmCarritoLastFocus.focus === "function") {
@@ -1010,6 +1917,7 @@
             document.querySelector(
                 '[data-bs-toggle="offcanvas"][data-bs-target="#carritoCanvas"]'
             ) ||
+            ensureModalFocusSentinel() ||
             document.getElementById("btn-cerrar-admin") ||
             document.body
         );
@@ -1017,18 +1925,12 @@
 
     function focusOutsideCanvas(canvas) {
         var target = getSafeFocusTarget(canvas);
-        if (target && typeof target.focus === "function") {
-            try {
-                target.focus({ preventScroll: true });
-                return;
-            } catch (e1) {
-                try {
-                    target.focus();
-                    return;
-                } catch (e2) {
-                    /* ignore */
-                }
-            }
+        if (target && typeof target.focus === "function" && tryFocus(target)) {
+            return;
+        }
+        var sentinel = ensureModalFocusSentinel();
+        if (tryFocus(sentinel)) {
+            return;
         }
         if (typeof document.body.focus === "function") {
             try {
@@ -1036,6 +1938,55 @@
                 document.body.focus({ preventScroll: true });
             } catch (e3) {
                 /* ignore */
+            }
+        }
+    }
+
+    function reforzarSalidaFoco(canvas) {
+        if (!canvas) {
+            return;
+        }
+        setTimeout(function () {
+            var ae = document.activeElement;
+            if (ae && typeof canvas.contains === "function" && canvas.contains(ae)) {
+                if (typeof ae.blur === "function") {
+                    try {
+                        ae.blur();
+                    } catch (e0) {
+                        /* ignore */
+                    }
+                }
+                focusOutsideCanvas(canvas);
+            }
+        }, 0);
+    }
+
+    function cerrarCarritoControlado() {
+        var canvas = document.getElementById("carritoCanvas");
+        if (!canvas) {
+            return;
+        }
+
+        moverFocoAntesCerrarCarrito();
+        focusOutsideCanvas(canvas);
+        reforzarSalidaFoco(canvas);
+        congelarFocusablesCanvas(canvas);
+
+        if (canvas && typeof canvas.setAttribute === "function") {
+            try {
+                canvas.setAttribute("inert", "");
+            } catch (e) {
+                /* ignore */
+            }
+        }
+
+        if (typeof bootstrap !== "undefined" && bootstrap.Offcanvas) {
+            var inst = bootstrap.Offcanvas.getInstance(canvas);
+            if (!inst && typeof bootstrap.Offcanvas.getOrCreateInstance === "function") {
+                inst = bootstrap.Offcanvas.getOrCreateInstance(canvas);
+            }
+            if (inst) {
+                inst.hide();
             }
         }
     }
@@ -1055,6 +2006,7 @@
             if (!t || t.id !== "carritoCanvas") {
                 return;
             }
+            restaurarFocusablesCanvas(canvas);
             if (canvas && typeof canvas.removeAttribute === "function") {
                 try {
                     canvas.removeAttribute("inert");
@@ -1083,6 +2035,8 @@
             // Move focus out before Bootstrap toggles aria-hidden.
             moverFocoAntesCerrarCarrito();
             focusOutsideCanvas(canvas);
+            reforzarSalidaFoco(canvas);
+            congelarFocusablesCanvas(canvas);
             if (canvas && typeof canvas.setAttribute === "function") {
                 try {
                     canvas.setAttribute("inert", "");
@@ -1097,6 +2051,7 @@
             if (!t || t.id !== "carritoCanvas") {
                 return;
             }
+            restaurarFocusablesCanvas(canvas);
             focusOutsideCanvas(canvas);
         };
 
@@ -1106,48 +2061,104 @@
         document.addEventListener("hidden.bs.offcanvas", manejarHidden, true);
     }
 
+    function instalarFocoPrevioAlCerrarCarrito() {
+        if (pvmCarritoPreCloseInstalled) {
+            return;
+        }
+        pvmCarritoPreCloseInstalled = true;
+
+        document.addEventListener(
+            "click",
+            function (ev) {
+                var target = ev.target;
+                if (!target) {
+                    return;
+                }
+                var dismiss = target.closest
+                    ? target.closest('#carritoCanvas [data-bs-dismiss="offcanvas"]')
+                    : null;
+                var canvas = document.getElementById("carritoCanvas");
+                if (dismiss && canvas) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (typeof ev.stopImmediatePropagation === "function") {
+                        ev.stopImmediatePropagation();
+                    }
+                    cerrarCarritoControlado();
+                }
+            },
+            true
+        );
+
+        document.addEventListener(
+            "keydown",
+            function (ev) {
+                if (ev.key !== "Escape") {
+                    return;
+                }
+                var canvas = document.getElementById("carritoCanvas");
+                if (!canvas) {
+                    return;
+                }
+                var ae = document.activeElement;
+                if (ae && typeof canvas.contains === "function" && canvas.contains(ae)) {
+                    cerrarCarritoControlado();
+                }
+            },
+            true
+        );
+    }
+
     window.pvmVolverAtras = function () {
+        var el = document.getElementById("carritoCanvas");
         if (window.history.length > 1) {
+            if (el && typeof bootstrap !== "undefined" && bootstrap.Offcanvas) {
+                var volverEjecutado = false;
+                var navegar = function () {
+                    if (volverEjecutado) {
+                        return;
+                    }
+                    volverEjecutado = true;
+                    window.history.back();
+                };
+
+                try {
+                    el.addEventListener("hidden.bs.offcanvas", navegar, { once: true });
+                } catch (e0) {
+                    /* ignore */
+                }
+
+                cerrarCarritoControlado();
+                setTimeout(navegar, 450);
+                return;
+            }
+
             moverFocoAntesCerrarCarrito();
+            focusOutsideCanvas(el || null);
             window.history.back();
             return;
         }
-        var el = document.getElementById("carritoCanvas");
+
         if (typeof bootstrap !== "undefined" && el) {
             var inst = bootstrap.Offcanvas.getInstance(el);
             if (inst) {
                 moverFocoAntesCerrarCarrito();
+                focusOutsideCanvas(el);
                 inst.hide();
             }
         }
     };
 
     function injectCartBackButton() {
-        var canvas = document.getElementById("carritoCanvas");
-        if (!canvas) {
-            return;
-        }
-        var header = canvas.querySelector(".offcanvas-header");
-        if (!header || header.querySelector("[data-pvm-volver]")) {
-            return;
-        }
-        var btn = document.createElement("button");
-        btn.type = "button";
-        btn.setAttribute("data-pvm-volver", "1");
-        btn.className = "btn btn-outline-secondary btn-sm me-2";
-        btn.setAttribute("aria-label", "Regresar a la página anterior");
-        btn.innerHTML =
-            '<i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver';
-        btn.addEventListener("click", function (ev) {
-            ev.preventDefault();
-            window.pvmVolverAtras();
-        });
-        header.insertBefore(btn, header.firstChild);
+        // Deshabilitado: este botón retenía foco dentro del offcanvas en algunos
+        // cierres y disparaba el warning de aria-hidden.
+        return;
     }
 
     function initCartUi() {
         injectCartBackButton();
         instalarFocoAlOcultarCarrito();
+        instalarFocoPrevioAlCerrarCarrito();
         aplicarUiCarritoPorContexto();
         actualizarCarrito();
     }
@@ -1158,3 +2169,4 @@
         initCartUi();
     }
 })();
+
